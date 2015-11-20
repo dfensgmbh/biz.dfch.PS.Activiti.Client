@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>biz.dfch.PS.Activiti.Client</id>
+    <version>0.0.1</version>
+    <title>biz.dfch.PS.Activiti.Client</title>
+    <authors>d-fens GmbH</authors>
+    <owners>d-fens GmbH</owners>
+	<licenseUrl>https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/blob/master/LICENSE</licenseUrl>
+	<projectUrl>https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client.git</projectUrl>
+	<iconUrl>https://raw.githubusercontent.com/dfensgmbh/biz.dfch.PS.Activiti.Client/master/logo-32x32.png</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>=============================
+
+Module: biz.dfch.PS.Activiti.Client
+
+d-fens GmbH, General-Guisan-Strasse 6, CH-6300 Zug, Switzerland
+
+This Microsoft PowerShell module contains Cmdlets to invoke workflows against Activiti 5.x REST API.
+
+You can also download this module via [NuGet](http://nuget.org) with [Install-Package biz.dfch.PS.Activiti.Client](https://www.nuget.org/packages/biz.dfch.PS.Activiti.Client/)
+
+See https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/wiki for a detailed description on how to use the Cmdlets in this module.
+</description>
+    <summary>This Microsoft PowerShell module contains Cmdlets to perform various base actions and utility/convenience functions with Activiti 5.x REST API.</summary>
+    <releaseNotes>20151120
+
+* providing core functions / cmdlets
+* installation base path is '$env:ProgramFiles\WindowsPowerShell\Modules' and can be manually set as input parameter to Install.ps1</releaseNotes>
+    <copyright>(c) 2015 d-fens GmbH</copyright>
+    <language>en-US</language>
+    <tags>dfch PowerShell Activiti Client</tags>
+    <dependencies>
+      <dependency id="biz.dfch.PS.System.Logging" version="1.0.5" />
+      <dependency id="biz.dfch.PS.System.Utilities" version="1.0.9" />
+    </dependencies>
+  </metadata>
+  <files xmlns="">
+    <file src="Install.ps1" target="Install.ps1" />
+    <file src="..\LICENSE" target="tools\LICENSE" />
+    <file src="..\NOTICE" target="tools\NOTICE" />
+    <file src="..\README.md" target="tools\README.md" />
+    <file src="biz.dfch.PS.Activiti.Client.psm1" target="tools\biz.dfch.PS.Activiti.Client.psm1" />
+    <file src="biz.dfch.PS.Activiti.Client.psd1" target="tools\biz.dfch.PS.Activiti.Client.psd1" />
+    <file src="biz.dfch.PS.Activiti.Client.xml" target="tools\biz.dfch.PS.Activiti.Client.xml" />
+    <file src="Enter-Server.ps1" target="tools\Enter-Server.ps1" />
+    <file src="Import-Module.ps1" target="tools\Import-Module.ps1" />
+    <file src="Get-WorkflowDefinitions.ps1" target="tools\Get-WorkflowDefinitions.ps1" />
+    <file src="Invoke-WorkflowInstance.ps1" target="tools\Invoke-WorkflowInstance.ps1" />
+    <file src="Get-WorkflowInstance.ps1" target="tools\Get-WorkflowInstance.ps1" />
+    <file src="Remove-WorkflowInstance.ps1" target="tools\Remove-WorkflowInstance.ps1" />
+    <file src="..\packages\biz.dfch.CS.Activiti.Client.1.0.0.0\lib\net45\biz.dfch.CS.Activiti.Client.dll" target="tools\biz.dfch.CS.Activiti.Client.dll" />
+    <file src="..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll" target="tools\Newtonsoft.Json.dll" />
+    <file src="..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.xml" target="tools\Newtonsoft.Json.xml" />
+  </files>
+</package>
