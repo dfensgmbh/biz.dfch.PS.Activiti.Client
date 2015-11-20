@@ -77,7 +77,7 @@ try
 		if($PSCmdlet.ShouldProcess($Object)) {
 
 			# Call method
-			$OutputParameter = $ProcessEngine.GetWorkflowInstance($Object.ToString());
+			$OutputParameter = $ProcessEngine.GetWorkflowInstance($Object.ToString(), $true);
 			$OutputObject += $OutputParameter;
 
 		} # if
