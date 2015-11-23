@@ -18,16 +18,6 @@ See PARAMETER section for a description of input parameters.
 .EXAMPLE
 Get-WorkflowDefinitions;
 
-data  : {Create timers process, Employee productivity, Famous One Task Process, Fix system failure...}
-size  : 10
-order : asc
-sort  : name
-start : 0
-total : 16
-
-.EXAMPLE
-Get-WorkflowDefinitions | Select -ExpandProperty data;
-
 id                       : createTimersProcess:1:31
 url                      : http://192.168.112.129:9000/activiti-rest/service/repository/process-definitions/createTimersProcess:1:31
 version                  : 1
@@ -84,6 +74,7 @@ PROCESS
 {
 
 [boolean] $fReturn = $false;
+$OutputParameter = $null;
 
 try 
 {
@@ -92,6 +83,10 @@ try
 	
 	# Call method
 	$OutputParameter = $ProcessEngine.GetWorkflowDefinitions();
+	if ( $OutputParameter -ne $null ) 
+	{
+		$OutputParameter = $OutputParameter | Select -ExpandProperty data;	
+	}
 	$fReturn = $true;
 
 }
