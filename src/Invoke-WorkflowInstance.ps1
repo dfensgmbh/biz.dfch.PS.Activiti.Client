@@ -81,10 +81,18 @@ try
 	$OutputObject = @();	
 	foreach($Object in $InputObject) {
 		if($PSCmdlet.ShouldProcess($Object)) {
-
-			# Call method
-			$OutputParameter = $ProcessEngine.InvokeWorkflowInstance($Object.ToString(), $WorkflowParameterHashtable);
-			$OutputObject += $OutputParameter;
+		
+			try 
+			{
+				# Call method
+				$OutputParameter = $ProcessEngine.InvokeWorkflowInstance($Object.ToString(), $WorkflowParameterHashtable);
+				$OutputObject += $OutputParameter;
+			} catch {
+				$msg = $_.Exception.Message;
+				$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $BrokeredMessage;
+				Log-Error $fn -msg $msg;
+				$PSCmdlet.ThrowTerminatingError($e);
+			}
 
 		} # if
 	} # foreach
