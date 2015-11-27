@@ -1,57 +1,161 @@
+function Stop-WorkflowInstance {
+<#
+.SYNOPSIS
+Removes Workflow Instances based on a Workflow Definitions from Activiti.
 
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-Describe -Tags "Invoke-WorkflowInstance" "Invoke-WorkflowInstance" {
+.DESCRIPTION
+Removes Workflow Instances based on a Workflow Definitions from Activiti.
 
-	Mock Export-ModuleMember { return $null; }
+
+.OUTPUTS
+
+
+.INPUTS
+See PARAMETER section for a description of input parameters.
+
+
+.EXAMPLE
+Stop-WorkflowInstance -id "27741"
+
+
+#>
+[CmdletBinding(
+	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/',
+    SupportsShouldProcess=$true,
+    ConfirmImpact="Low"
+)]
+
+Param 
+(
+	# Specifies a reference to a existing workflow instance
+	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)]
+	[ValidateNotNullorEmpty()]
+	[Alias("WorkflowId")]
+	[Alias("workflow")]
+	[Alias("id")]
+	$InputObject
+	,
+	# Specifies a references to the Activiti client
+	[Parameter(Mandatory = $false, Position = 1)]
+	[Alias("svc")]
+	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
+)
+
+BEGIN 
+{
+	$datBegin = [datetime]::Now;
+	[string] $fn = $MyInvocation.MyCommand.Name;
+	Log-Debug $fn ("CALL.") -fac 1;
+}
+# BEGIN 
+
+PROCESS 
+{
+
+[boolean] $fReturn = $false;
+
+try 
+{
+	# Parameter validation
+	# N/A
 	
-	. "$here\$sut"
-	
-	$svc = Enter-ActivitiServer;
+	# Get ValueFromPipeline
+	$OutputObject = @();	
+	foreach($Object in $InputObject) {
+		if($PSCmdlet.ShouldProcess($Object)) {
 
-	Context "Invoke-WorkflowInstance" {
-	
-		# Context wide constants
-		# N/A
+			# Call method
+			$ProcessEngine.DeleteWorkflowInstance($Object.ToString());
 
-		It "Invoke-WorkflowInstance-ShouldReturnObject" -Test {
-			# Arrange
-			$defid = "createTimersProcess:1:31";
-			$vars = @{"duration"="long"; "throwException"="true"};
-			
-			# Act
-			$result = Invoke-WorkflowInstance -id $defid -params $vars -svc $svc;
+		} # if
+	} # foreach
 
-			# Assert
-			$result | Should Not Be $null;
-			$defid -eq $result.processDefinitionId | Should Be $true;
+	$fReturn = $true;
+
+}
+catch 
+{
+	if($gotoSuccess -eq $_.Exception.Message) 
+	{
+			$fReturn = $true;
+	} 
+	else 
+	{
+		[string] $ErrorText = "catch [$($_.FullyQualifiedErrorId)]";
+		$ErrorText += (($_ | fl * -Force) | Out-String);
+		$ErrorText += (($_.Exception | fl * -Force) | Out-String);
+		$ErrorText += (Get-PSCallStack | Out-String);
+		
+		if($_.Exception -is [System.Net.WebException]) 
+		{
+			Log-Critical $fn "Login to Uri '$Uri' with Username '$Username' FAILED [$_].";
+			Log-Debug $fn $ErrorText -fac 3;
 		}
-
+		else 
+		{
+			Log-Error $fn $ErrorText -fac 3;
+			if($gotoError -eq $_.Exception.Message) 
+			{
+				Log-Error $fn $e.Exception.Message;
+				$PSCmdlet.ThrowTerminatingError($e);
+			} 
+			elseif($gotoFailure -ne $_.Exception.Message) 
+			{ 
+				Write-Verbose ("$fn`n$ErrorText"); 
+			} 
+			else 
+			{
+				# N/A
+			}
+		}
+		$fReturn = $false;
+		$OutputParameter = $null;
 	}
 }
+finally 
+{
+	# Clean up
+	# N/A
+}
+#return $OutputParameter;
+# N/A
 
-#
+}
+# PROCESS
+
+END 
+{
+	$datEnd = [datetime]::Now;
+	Log-Debug -fn $fn -msg ("RET. fReturn: [{0}]. Execution time: [{1}]ms. Started: [{2}]." -f $fReturn, ($datEnd - $datBegin).TotalMilliseconds, $datBegin.ToString('yyyy-MM-dd HH:mm:ss.fffzzz')) -fac 2;
+}
+# END
+
+} # function
+
+if($MyInvocation.ScriptName) { Export-ModuleMember -Function Stop-WorkflowInstance; } 
+
+# 
 # Copyright 2015 d-fens GmbH
-#
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 # http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+# 
 
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUjpp/AXRQGHWn4DlexTljdXza
-# PUugghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUWjzX0voAITxVfbB7ckmDxU1n
+# 0EugghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -150,26 +254,26 @@ Describe -Tags "Invoke-WorkflowInstance" "Invoke-WorkflowInstance" {
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRBWqMWyP2iaTg4
-# XKFGq/x7lXN3JjANBgkqhkiG9w0BAQEFAASCAQCgD4wpK9hKWlRn3lUnSdXhd/3j
-# P9bsxTofJg1yClw1n6GVQLfSLdgp1jHfH/Brkfw/71L/b0cgNgamVsRWkLo3EKXN
-# U9sHef56FvkP37KnjdgXV3SXYscXCDm/PIuxQVxbuiWScIPj1ySnIdDwOcMZYv7v
-# 7/tc/jgcmrj15Ftru9bU47DfI8lRgZxhhrJemfMKyYlM7Y+g4FcN3QcpG2ebRSna
-# 8Cx10vqw57Ltcg/4zEgZiG/obb/08XU6AUy/3hBhEbVCdaaWhAG64RGdVDCPly83
-# bYBRKEVZsfm3TxcfQA5zzmxklRVyb21E7GnLA7eSWigFU65zbFHCe9OMfOgDoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBQ3UWGaBHcbk+0n
+# nSg1h+jhLdV5ujANBgkqhkiG9w0BAQEFAASCAQBaypuJAdU2L8LKGKUPNiccGF2T
+# G9jrAYAwAZPm96HAhCdhWf9nH7Up/QmNmhW5egTRx/XEOLEOTH1j09Q+JFUIqRxx
+# NdqI82W1WAJJsaC7LIdBxA03zszSneDA5m6WaoClefVKedGGWNCLBibiac2+BxlB
+# jbFY+6ej+0HjKXjewfV86tsHwaVycRUJYvkXWqpCLcouTrPzNhMd9eR8VcmVHMoM
+# 183O6yRHna5z4OMsvcyd5SR1jP6E9jioqIyonawLezEmDrfzTOyBnXsPYl/Tl/Ev
+# mnHPZq+tHzTE0PLR7zvm5FfwEdFE9gGbp9+Uy1pwSboupMgH0wB6K2QkSl/zoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTAyODE0MjAxNFowIwYJKoZIhvcNAQkEMRYEFJq4WKsuvOerIxRBm/ExxnpYNZro
+# MTEyNzE4Mzk0MFowIwYJKoZIhvcNAQkEMRYEFM9KMWaFDBCqkHoqfkYnxbD0rffK
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQAWcoSO3SPCmHsu2WHm
-# KwIYNzNfJstZKdk8Sha83VHfkIG2r9GAOGPGJxru27puRfQBZpM62oP71J5GZYjN
-# FWTHu1I4Dsxvv3ps8Oe9UAVl1aJX7nbxPzJaM5nXq8hX7M33P10xm7z/bGxSLH6/
-# urf2NFWKFpsKTj6YkqhPm3vJUqOH40CG2F2SBqRCeW1Key3e3VGaPLoYg8XrCjNf
-# JqrRkhLuhs9gawOLWXKlE7scH5Eliv3QxDu0xBX7hTSK1QzUa+s4uIRKBMeZW3AS
-# NVjVeWK4TS1UgMhBsU8PO9HHZdjRGtAjbU0QF3KS4uxHqmNd/QN1zNFWYH30Nykl
-# 0J9z
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCq3HZefiNvjecAfEt9
+# v8Dr0M2TrtFok2CjA6x/tyGxIvRSrBZNiQVRfGeHoi3t99ElBo33iRuifHtZnPg9
+# //XSHHBKi5Mr95agUHfZjUPQnLni44EZEWaZbECb6eErtQF/kHLcah3EPmdl2FJt
+# pn0AIcagZMtiakhFNDqHO9+1pmkqU+bYKODRMtA6HRnOZ08Lh11UCammKj+FR4d/
+# AKy9u6iapbEw+zySrT9PjL5+EzelDq893+FA/TNZZiqRLOBZ58/hN0RPDUeH/8jT
+# jc7VcL3wFtXrwcYJdJLcTvyO5Q6fmHWpFDqFTzwGlHjxAoWFHu8iaFJyBjBjNM/q
+# g81V
 # SIG # End signature block

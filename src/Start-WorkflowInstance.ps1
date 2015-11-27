@@ -1,56 +1,196 @@
+function Start-WorkflowInstance {
+<#
+.SYNOPSIS
+Creates Workflow Instances based on a Workflow Definitions from Activiti.
 
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-Describe -Tags "Get-WorkflowDefinitions" "Get-WorkflowDefinitions" {
+.DESCRIPTION
+Creates Workflow Instances based on a Workflow Definitions from Activiti.
 
-	Mock Export-ModuleMember { return $null; }
+
+.OUTPUTS
+
+
+.INPUTS
+See PARAMETER section for a description of input parameters.
+
+
+.EXAMPLE
+Start-WorkflowInstance -id "createTimersProcess:1:31" -params @{"duration"="long"; "throwException"="true"};
+
+id                   : 27741
+url                  : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/27741
+businessKey          : Worker#1
+suspended            : False
+ended                : False
+completed            : False
+processDefinitionId  : createTimersProcess:1:31
+processDefinitionUrl : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/createTimersProcess:1:31
+activityId           :
+tenantId             :
+variables            : {}
+
+#>
+[CmdletBinding(
+	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/',
+    SupportsShouldProcess=$true,
+    ConfirmImpact="Low"
+)]
+<#[OutputType([<Type>])]#>
+Param 
+(
+	# Specifies a reference to a existing workflow definition
+	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)]
+	[ValidateNotNullorEmpty()]
+	[Alias("WorkflowDefinitionId")]
+	[Alias("workflow")]
+	[Alias("id")]
+	$InputObject
+	,
+	# Specifies workflow parameterset
+	[Parameter(Mandatory = $false, Position = 1)]
+	[Alias("parameters")]
+	[Alias("params")]
+	[hashtable] $WorkflowParameterHashtable
+	,
+	# Specifies a references to the Activiti client
+	[Parameter(Mandatory = $false, Position = 2)]
+	[Alias("svc")]
+	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
+)
+
+BEGIN 
+{
+	$datBegin = [datetime]::Now;
+	[string] $fn = $MyInvocation.MyCommand.Name;
+	Log-Debug $fn ("CALL.") -fac 1;
+}
+# BEGIN 
+
+PROCESS 
+{
+
+[boolean] $fReturn = $false;
+
+try 
+{
+	# Parameter validation
+	# N/A
 	
-	. "$here\$sut"
+	# Get ValueFromPipeline
+	$OutputObject = @();	
+	foreach($Object in $InputObject) {
+		if($PSCmdlet.ShouldProcess($Object)) {
+		
+			try 
+			{
+				# Call method
+				$OutputParameter = $ProcessEngine.InvokeWorkflowInstance($Object.ToString(), $WorkflowParameterHashtable);
+				$OutputObject += $OutputParameter;
+			} catch {
+				$msg = $_.Exception.Message;
+				$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $BrokeredMessage;
+				Log-Error $fn -msg $msg;
+				$PSCmdlet.ThrowTerminatingError($e);
+			}
+
+		} # if
+	} # foreach
 	
-	$svc = Enter-ActivitiServer;
+	# Set output depending is ValueFromPipeline
+	if ( $OutputObject.Count -gt 1 )
+	{
+		$OutputParameter = $OutputObject[0];
+	}
+	else
+	{
+		$OutputParameter = $OutputObject;
+	}
+	$fReturn = $true;
 
-	Context "Get-WorkflowDefinitions" {
-	
-		# Context wide constants
-		# N/A
-
-		It "Get-WorkflowDefinitionsList-ShouldReturnList" -Test {
-			# Arrange
-			# N/A
-			
-			# Act
-			$result = Get-WorkflowDefinitions -svc $svc;
-
-			# Assert
-			$result | Should Not Be $null;
-			0 -lt $result.Count | Should Be $true;
+}
+catch 
+{
+	if($gotoSuccess -eq $_.Exception.Message) 
+	{
+			$fReturn = $true;
+	} 
+	else 
+	{
+		[string] $ErrorText = "catch [$($_.FullyQualifiedErrorId)]";
+		$ErrorText += (($_ | fl * -Force) | Out-String);
+		$ErrorText += (($_.Exception | fl * -Force) | Out-String);
+		$ErrorText += (Get-PSCallStack | Out-String);
+		
+		if($_.Exception -is [System.Net.WebException]) 
+		{
+			Log-Critical $fn "Login to Uri '$Uri' with Username '$Username' FAILED [$_].";
+			Log-Debug $fn $ErrorText -fac 3;
 		}
-
+		else 
+		{
+			Log-Error $fn $ErrorText -fac 3;
+			if($gotoError -eq $_.Exception.Message) 
+			{
+				Log-Error $fn $e.Exception.Message;
+				$PSCmdlet.ThrowTerminatingError($e);
+			} 
+			elseif($gotoFailure -ne $_.Exception.Message) 
+			{ 
+				Write-Verbose ("$fn`n$ErrorText"); 
+			} 
+			else 
+			{
+				# N/A
+			}
+		}
+		$fReturn = $false;
+		$OutputParameter = $null;
 	}
 }
+finally 
+{
+	# Clean up
+	# N/A
+}
+return $OutputParameter;
 
-#
+}
+# PROCESS
+
+END 
+{
+	$datEnd = [datetime]::Now;
+	Log-Debug -fn $fn -msg ("RET. fReturn: [{0}]. Execution time: [{1}]ms. Started: [{2}]." -f $fReturn, ($datEnd - $datBegin).TotalMilliseconds, $datBegin.ToString('yyyy-MM-dd HH:mm:ss.fffzzz')) -fac 2;
+}
+# END
+
+} # function
+
+Set-Alias -Name Invoke- -Value 'Start-WorkflowInstance';
+if($MyInvocation.ScriptName) { Export-ModuleMember -Function Start-WorkflowInstance -Alias Invoke-; } 
+
+# 
 # Copyright 2015 d-fens GmbH
-#
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+# 
 # http://www.apache.org/licenses/LICENSE-2.0
-#
+# 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+# 
 
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUjpp/AXRQGHWn4DlexTljdXza
-# PUugghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUGnzIpRyyxOWR9cIOOYuurjc3
+# GwqgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -149,26 +289,26 @@ Describe -Tags "Get-WorkflowDefinitions" "Get-WorkflowDefinitions" {
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRBWqMWyP2iaTg4
-# XKFGq/x7lXN3JjANBgkqhkiG9w0BAQEFAASCAQCgD4wpK9hKWlRn3lUnSdXhd/3j
-# P9bsxTofJg1yClw1n6GVQLfSLdgp1jHfH/Brkfw/71L/b0cgNgamVsRWkLo3EKXN
-# U9sHef56FvkP37KnjdgXV3SXYscXCDm/PIuxQVxbuiWScIPj1ySnIdDwOcMZYv7v
-# 7/tc/jgcmrj15Ftru9bU47DfI8lRgZxhhrJemfMKyYlM7Y+g4FcN3QcpG2ebRSna
-# 8Cx10vqw57Ltcg/4zEgZiG/obb/08XU6AUy/3hBhEbVCdaaWhAG64RGdVDCPly83
-# bYBRKEVZsfm3TxcfQA5zzmxklRVyb21E7GnLA7eSWigFU65zbFHCe9OMfOgDoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBSPHuXVVvIJWR7c
+# UfVWTzqORnq4GTANBgkqhkiG9w0BAQEFAASCAQCLfrwAgwnBY1xTRcxtOraPrfuJ
+# 2M+gevahvUorugFnj39tV5aO3G6M/LKCghEoQ/F5VruOD6wcNEz24ux5j8LByvGl
+# tVJly3ZaGLuk55iMs9LCtGaMCPswA76ySQUmKz5LwhulcpwFcJHKIVbKjwOdJY6j
+# UKqZ8TOvdC1P5OMQMz1AhOQyMmsgrR3PGb/t5ag9++wQOj8r+OlqQ0r5bYXPirEr
+# TjBbJyMC8wjgEmN5ZxxuOFSucePSPo5hOz5Rp2Y5SpL3tqHxKviOP54HkHPq8g4D
+# x5t4E8y+HOhAP6+H7H5oGcNl+ju4dL7kK9l9dcQG2ceVb7ks2R5OIcBQKY1loYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTAyODE0MjAxNFowIwYJKoZIhvcNAQkEMRYEFJq4WKsuvOerIxRBm/ExxnpYNZro
+# MTEyNzE4MzkzOVowIwYJKoZIhvcNAQkEMRYEFJ6IaGsbjLns9eWE6qI2JO+9zCwu
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQAWcoSO3SPCmHsu2WHm
-# KwIYNzNfJstZKdk8Sha83VHfkIG2r9GAOGPGJxru27puRfQBZpM62oP71J5GZYjN
-# FWTHu1I4Dsxvv3ps8Oe9UAVl1aJX7nbxPzJaM5nXq8hX7M33P10xm7z/bGxSLH6/
-# urf2NFWKFpsKTj6YkqhPm3vJUqOH40CG2F2SBqRCeW1Key3e3VGaPLoYg8XrCjNf
-# JqrRkhLuhs9gawOLWXKlE7scH5Eliv3QxDu0xBX7hTSK1QzUa+s4uIRKBMeZW3AS
-# NVjVeWK4TS1UgMhBsU8PO9HHZdjRGtAjbU0QF3KS4uxHqmNd/QN1zNFWYH30Nykl
-# 0J9z
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQBEAsj4yw17VixM4pNP
+# UP3cutfe61drPd0ZjB3pTu+hvrHBXGOh+8HJXolclijQ+1ERzHvc5foxtF8avCvH
+# 9PmDpbd0NB7Jlh+g+cVpwsThGf6/0TloJ7cd5ZoRU/vENQ0CxRhYkV4c2TkaWgP2
+# xo9Yw7hSFH+noJzKzwwfYMqnFdmAQamfvtdzMXe6LjQWHjyP6WrSQDYDbWteCB83
+# XzvLRb41fQRE71m8x7y0W/0UGrZZiNR+VdNqcXHZQdQFlraOYgM42kI3iY08hPGx
+# qyCfDLh5xCEMgaW8ft92bPo0aFlY95uWV34S0AI+rVFDlOvKcO1+d8aVCVQ3ou1g
+# /ZsK
 # SIG # End signature block

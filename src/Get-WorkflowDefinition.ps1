@@ -1,11 +1,11 @@
-function Invoke-WorkflowInstance {
+function Get-WorkflowDefinition {
 <#
 .SYNOPSIS
-Creates Workflow Instances based on a Workflow Definitions from Activiti.
+Get a list of configured Workflow Definitions from Activiti.
 
 
 .DESCRIPTION
-Creates Workflow Instances based on a Workflow Definitions from Activiti.
+Get a list of configured Workflow Definitions from Activiti.
 
 
 .OUTPUTS
@@ -16,45 +16,48 @@ See PARAMETER section for a description of input parameters.
 
 
 .EXAMPLE
-Invoke-WorkflowInstance -id "createTimersProcess:1:31" -params @{"duration"="long"; "throwException"="true"};
+Get-WorkflowDefinition;
 
-id                   : 27741
-url                  : http://192.168.112.129:9000/activiti-rest/service/runtime/process-instances/27741
-businessKey          : Worker#1
-suspended            : False
-ended                : False
-completed            : False
-processDefinitionId  : createTimersProcess:1:31
-processDefinitionUrl : http://192.168.112.129:9000/activiti-rest/service/repository/process-definitions/createTimersProcess:1:31
-activityId           :
-tenantId             :
-variables            : {}
+id                       : createTimersProcess:1:31
+url                      : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/createTimersProcess:1:31
+version                  : 1
+key                      : createTimersProcess
+category                 : Examples
+suspended                : False
+name                     : Create timers process
+description              : Test process to create a number of timers.
+deploymentId             : 20
+deploymentUrl            : http://activiti.example.com:9000/activiti-rest/service/repository/deployments/20
+graphicalNotationDefined : False
+resource                 : http://activiti.example.com:9000/activiti-rest/service/repository/deployments/20/resources/createTimersProcess.bpmn20.xml
+diagramResource          :
+startFormDefined         : False
+
+id                       : employee-productivity-report:1:2510
+url                      : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/employee-productivity-report:1:2510
+version                  : 1
+key                      : employee-productivity-report
+category                 : activiti-report
+suspended                : False
+name                     : Employee productivity
+description              :
+deploymentId             : 2504
+deploymentUrl            : http://activiti.example.com:9000/activiti-rest/service/repository/deployments/2504
+graphicalNotationDefined : False
+resource                 : http://activiti.example.com:9000/activiti-rest/service/repository/deployments/2504/resources/org/activiti/explorer/demo/process/reports/employeeProductivity
+                           bpmn20.xml
+diagramResource          :
+startFormDefined         : False
 
 #>
 [CmdletBinding(
-	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/',
-    SupportsShouldProcess=$true,
-    ConfirmImpact="Low"
+	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
 )]
 <#[OutputType([<Type>])]#>
 Param 
 (
-	# Specifies a reference to a existing workflow definition
-	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)]
-	[ValidateNotNullorEmpty()]
-	[Alias("WorkflowDefinitionId")]
-	[Alias("workflow")]
-	[Alias("id")]
-	$InputObject
-	,
-	# Specifies workflow parameterset
-	[Parameter(Mandatory = $false, Position = 1)]
-	[Alias("parameters")]
-	[Alias("params")]
-	[hashtable] $WorkflowParameterHashtable
-	,
 	# Specifies a references to the Activiti client
-	[Parameter(Mandatory = $false, Position = 2)]
+	[Parameter(Mandatory = $false)]
 	[Alias("svc")]
 	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
 )
@@ -71,40 +74,18 @@ PROCESS
 {
 
 [boolean] $fReturn = $false;
+$OutputParameter = $null;
 
 try 
 {
 	# Parameter validation
 	# N/A
 	
-	# Get ValueFromPipeline
-	$OutputObject = @();	
-	foreach($Object in $InputObject) {
-		if($PSCmdlet.ShouldProcess($Object)) {
-		
-			try 
-			{
-				# Call method
-				$OutputParameter = $ProcessEngine.InvokeWorkflowInstance($Object.ToString(), $WorkflowParameterHashtable);
-				$OutputObject += $OutputParameter;
-			} catch {
-				$msg = $_.Exception.Message;
-				$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $BrokeredMessage;
-				Log-Error $fn -msg $msg;
-				$PSCmdlet.ThrowTerminatingError($e);
-			}
-
-		} # if
-	} # foreach
-	
-	# Set output depending is ValueFromPipeline
-	if ( $OutputObject.Count -gt 1 )
+	# Call method
+	$OutputParameter = $ProcessEngine.GetWorkflowDefinitions();
+	if ( $OutputParameter -ne $null ) 
 	{
-		$OutputParameter = $OutputObject[0];
-	}
-	else
-	{
-		$OutputParameter = $OutputObject;
+		$OutputParameter = $OutputParameter | Select -ExpandProperty data;	
 	}
 	$fReturn = $true;
 
@@ -167,10 +148,10 @@ END
 
 } # function
 
-if($MyInvocation.ScriptName) { Export-ModuleMember -Function Invoke-WorkflowInstance; } 
+if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowDefinition; } 
 
 # 
-# Copyright 2014-2015 d-fens GmbH
+# Copyright 2015 d-fens GmbH
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -188,8 +169,8 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Invoke-WorkflowInst
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUinvqKU2t9nTQwJkPtoItottF
-# 79OgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUiqRV6OAX+ilVObyacArCjkrk
+# 8xOgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -288,26 +269,26 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Invoke-WorkflowInst
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTL763k+hWP+N1b
-# 3/aOWSmdFr8k7zANBgkqhkiG9w0BAQEFAASCAQC3ZDi+1Nl9j7cVZXHw/Kyhdgrx
-# bpuey0y/4S9Qn3V8ltFWaS/btbsaWPlxx+X6FBAZgPYvKma6IFHKeVnswU1hStt2
-# U1Gbp3hQxkLyMrJ1YUuJDlJbei9Z/JaBcTgEEsiD168Hy4bdkNy9J6cDGcooZc0I
-# L3KjhfLc5zmaq3YWyUBwlD6s3cPltqNXCOUTJkXItCgXB8A/tPbtmPYMQnq02RqN
-# keDVlIukgC74Tn1cKlKznSbw3jRhr2rHbKBJXe4Phptph5kuUNJfOt3n8Trac7nP
-# 2CU2TTu0+zFx9sdZAIPNIwxOVrsO665oPunSR9jmos3ZB1w6AdPhK1Hl01d0oYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBQ9O+a7oLSiOf4X
+# RE/10s9DUQNz0zANBgkqhkiG9w0BAQEFAASCAQAdwsP2Xve8Cq7XAwgc0g0CeALZ
+# olbFUFAqImFLPoQwmwhy01W4wnut8a3IqHObWqWQfO2jEsa0AUPuiDeHpqUQvs/+
+# DCfXHnyItUJ6zhGImkLePQFbh6fMdTf9Qvp3z01SxOzX04CI0NS8BUMOvXrh07xS
+# 42pT0H4EIlGJfNj7MV2S1fH2LFZ2H1z3a2uBUVNggZEszJk6zfKCQje9XhDgj7jZ
+# ng/jJj9oUZnZrBpWiBfmt4uZrzK55/imrDMM1SiCb/NZx208a6CBwgmsWttk6ng9
+# VpLPOzGMckdubi9O0NQdejVhktFxuE96rg6tHfAUyOmAujrHdr48mJoIB1c4oYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTAyNzA4NDUyNlowIwYJKoZIhvcNAQkEMRYEFJrCIvR/2C+slpGqr0SayvbsjhB3
+# MTEyNzE4Mjc1M1owIwYJKoZIhvcNAQkEMRYEFJ9vWB/aUDq/YA4pYjltzV65Rqbo
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCcA/LqMp8S4R7Xg9tR
-# qqkrDkt4rdmSiZzcPKSi82hbMD/BPpnYzwuxhGS7U4TD0WlIK+5BJbklKRPz2YsY
-# Nr9pX3I7Q6tPH0NPjjqwhd0ywgfrO5yrWZOZNxPanjunuQ0UatDXKu5BI9rSfM6V
-# 37l/rR1ZQp2Z9468IMIW0E+KRDOFUG5NhD/69OuNTDw+nd7UGPrjoZs4X30e4qIS
-# oIja2DRgKgyZmektcInSDqF8UFYYdnoWFZjZl7TaB2z+9hg7BcCtGcURw6V8fdXS
-# QxjmTqKQvHdQSbYv2eq50I/mFT1yhYmgUdojmLhkXkFem6mGmV+/ERxA1Na0RQ9d
-# jw8k
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCWq2bpZ5P/4nLkYrUM
+# kbgyo51bnjLhpDhMOdgd1jO5fT0D4kLx/bPmHASQcUPwN0FGODrTSD8nuC2pifU+
+# i3RqhY/aiViibVk9VGNHxFVfdYroN6AOupeEXl5zlq6lFH+1LOuzjb1JBeH25XaW
+# FB/Vfr9JCWo+k4yyjsLQ7KpmXm49iK+oShQtWIqn8/Er+WBNBNkeT46D0sUHoQOM
+# koX/imXYuTA5OaNYFQQqsAW8op0NY+8FQWsd39gKm0Aps17XyEPyqYIObgCQ792I
+# cpEvifOO5x65UvhrulMqtAqQ6poO9MsA+tAoD9O/ZgyiPZWpk2y9D9akicrHDW1H
+# kMjv
 # SIG # End signature block

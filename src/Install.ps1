@@ -1,161 +1,189 @@
-function Remove-WorkflowInstance {
 <#
 .SYNOPSIS
-Removes Workflow Instances based on a Workflow Definitions from Activiti.
+Installs the module into a path inside $ENV:PSModulePath.
 
 
 .DESCRIPTION
-Removes Workflow Instances based on a Workflow Definitions from Activiti.
-
-
-.OUTPUTS
-
-
-.INPUTS
-See PARAMETER section for a description of input parameters.
-
+Installs the module into a path inside $ENV:PSModulePath. 
+Any existing module customisations are overwritten by the 
+installation routine (such as <module>.xml).
 
 .EXAMPLE
-Remove-WorkflowInstance -id "27741"
+Installs the module into the default directory.
 
+PS > .\Install.ps1
 
+.EXAMPLE
+Installs the module into the C:\PSModules directory.
+
+PS > .\Install.ps1 -ModulePath C:\PSModules
 #>
-[CmdletBinding(
-	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/',
-    SupportsShouldProcess=$true,
-    ConfirmImpact="Low"
-)]
-
-Param 
-(
-	# Specifies a reference to a existing workflow instance
-	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)]
-	[ValidateNotNullorEmpty()]
-	[Alias("WorkflowId")]
-	[Alias("workflow")]
-	[Alias("id")]
-	$InputObject
+[CmdletBinding()]
+PARAM
+( 
+	# Specifies the module name. Leave as is.
+	[string] $ModuleName = 'biz.dfch.PS.Activiti.Client'
 	,
-	# Specifies a references to the Activiti client
-	[Parameter(Mandatory = $false, Position = 1)]
-	[Alias("svc")]
-	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
+	# Specifies the target base directory into which to install the module.
+    [string] $ModulePath = (Join-Path $env:ProgramFiles WindowsPowerShell\Modules)
 )
 
-BEGIN 
+end
 {
-	$datBegin = [datetime]::Now;
-	[string] $fn = $MyInvocation.MyCommand.Name;
-	Log-Debug $fn ("CALL.") -fac 1;
-}
-# BEGIN 
+    $targetDirectory = Join-Path $ModulePath $ModuleName
+    $scriptRoot      = Split-Path $MyInvocation.MyCommand.Path -Parent
+    $sourceDirectory = Join-Path $scriptRoot Tools
 
-PROCESS 
+    if ($PSVersionTable.PSVersion.Major -ge 5)
+    {
+        $manifestFile    = Join-Path $sourceDirectory ('{0}.psd1' -f $ModuleName)
+        $manifest        = Test-ModuleManifest -Path $manifestFile -WarningAction Ignore -ErrorAction Stop
+        $targetDirectory = Join-Path $targetDirectory $manifest.Version.ToString()
+    }
+
+    Update-Directory -Source $sourceDirectory -Destination $targetDirectory
+
+    if ($PSVersionTable.PSVersion.Major -lt 4)
+    {
+        $ModulePaths = [Environment]::GetEnvironmentVariable('PSModulePath', 'Machine') -split ';'
+        if ($ModulePaths -notcontains $ModulePath)
+        {
+            Write-Verbose "Adding '$ModulePath' to PSModulePath."
+
+            $ModulePaths = @(
+                $ModulePath
+                $ModulePaths
+            )
+
+            $newModulePath = $ModulePaths -join ';'
+
+            [Environment]::SetEnvironmentVariable('PSModulePath', $newModulePath, 'Machine')
+            $env:PSModulePath += ";$ModulePath"
+        }
+    }
+}
+
+begin
 {
+    function Update-Directory
+    {
+        [CmdletBinding()]
+        param (
+            [Parameter(Mandatory = $true)]
+            [string] $Source,
 
-[boolean] $fReturn = $false;
+            [Parameter(Mandatory = $true)]
+            [string] $Destination
+        )
 
-try 
-{
-	# Parameter validation
-	# N/A
-	
-	# Get ValueFromPipeline
-	$OutputObject = @();	
-	foreach($Object in $InputObject) {
-		if($PSCmdlet.ShouldProcess($Object)) {
+        $Source = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Source)
+        $Destination = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Destination)
 
-			# Call method
-			$ProcessEngine.DeleteWorkflowInstance($Object.ToString());
+        if (-not (Test-Path -LiteralPath $Destination))
+        {
+            $null = New-Item -Path $Destination -ItemType Directory -ErrorAction Stop
+        }
 
-		} # if
-	} # foreach
+        try
+        {
+            $sourceItem = Get-Item -LiteralPath $Source -ErrorAction Stop
+            $destItem = Get-Item -LiteralPath $Destination -ErrorAction Stop
 
-	$fReturn = $true;
+            if ($sourceItem -isnot [System.IO.DirectoryInfo] -or $destItem -isnot [System.IO.DirectoryInfo])
+            {
+                throw 'Not Directory Info'
+            }
+        }
+        catch
+        {
+            throw 'Both Source and Destination must be directory paths.'
+        }
 
+        $sourceFiles = Get-ChildItem -Path $Source -Recurse |
+                       Where-Object { -not $_.PSIsContainer }
+
+        foreach ($sourceFile in $sourceFiles)
+        {
+            $relativePath = Get-RelativePath $sourceFile.FullName -RelativeTo $Source
+            $targetPath = Join-Path $Destination $relativePath
+
+            $sourceHash = Get-FileHash -Path $sourceFile.FullName
+            $destHash = Get-FileHash -Path $targetPath
+
+            if ($sourceHash -ne $destHash)
+            {
+                $targetParent = Split-Path $targetPath -Parent
+
+                if (-not (Test-Path -Path $targetParent -PathType Container))
+                {
+                    $null = New-Item -Path $targetParent -ItemType Directory -ErrorAction Stop
+                }
+
+                Write-Verbose "Updating file $relativePath to new version."
+                Copy-Item $sourceFile.FullName -Destination $targetPath -Force -ErrorAction Stop
+            }
+        }
+
+        $targetFiles = Get-ChildItem -Path $Destination -Recurse |
+                       Where-Object { -not $_.PSIsContainer }
+
+        foreach ($targetFile in $targetFiles)
+        {
+            $relativePath = Get-RelativePath $targetFile.FullName -RelativeTo $Destination
+            $sourcePath = Join-Path $Source $relativePath
+
+            if (-not (Test-Path $sourcePath -PathType Leaf))
+            {
+                Write-Verbose "Removing unknown file $relativePath from module folder."
+                Remove-Item -LiteralPath $targetFile.FullName -Force -ErrorAction Stop
+            }
+        }
+
+    }
+
+    function Get-RelativePath
+    {
+        param ( [string] $Path, [string] $RelativeTo )
+        return $Path -replace "^$([regex]::Escape($RelativeTo))\\?"
+    }
+
+    function Get-FileHash
+    {
+        param ([string] $Path)
+
+        if (-not (Test-Path -LiteralPath $Path -PathType Leaf))
+        {
+            return $null
+        }
+
+        $item = Get-Item -LiteralPath $Path
+        if ($item -isnot [System.IO.FileSystemInfo])
+        {
+            return $null
+        }
+
+        $stream = $null
+
+        try
+        {
+            $sha = New-Object System.Security.Cryptography.SHA256CryptoServiceProvider
+            $stream = $item.OpenRead()
+            $bytes = $sha.ComputeHash($stream)
+            return [convert]::ToBase64String($bytes)
+        }
+        finally
+        {
+            if ($null -ne $stream) { $stream.Close() }
+            if ($null -ne $sha)    { $sha.Clear() }
+        }
+    }
 }
-catch 
-{
-	if($gotoSuccess -eq $_.Exception.Message) 
-	{
-			$fReturn = $true;
-	} 
-	else 
-	{
-		[string] $ErrorText = "catch [$($_.FullyQualifiedErrorId)]";
-		$ErrorText += (($_ | fl * -Force) | Out-String);
-		$ErrorText += (($_.Exception | fl * -Force) | Out-String);
-		$ErrorText += (Get-PSCallStack | Out-String);
-		
-		if($_.Exception -is [System.Net.WebException]) 
-		{
-			Log-Critical $fn "Login to Uri '$Uri' with Username '$Username' FAILED [$_].";
-			Log-Debug $fn $ErrorText -fac 3;
-		}
-		else 
-		{
-			Log-Error $fn $ErrorText -fac 3;
-			if($gotoError -eq $_.Exception.Message) 
-			{
-				Log-Error $fn $e.Exception.Message;
-				$PSCmdlet.ThrowTerminatingError($e);
-			} 
-			elseif($gotoFailure -ne $_.Exception.Message) 
-			{ 
-				Write-Verbose ("$fn`n$ErrorText"); 
-			} 
-			else 
-			{
-				# N/A
-			}
-		}
-		$fReturn = $false;
-		$OutputParameter = $null;
-	}
-}
-finally 
-{
-	# Clean up
-	# N/A
-}
-#return $OutputParameter;
-# N/A
-
-}
-# PROCESS
-
-END 
-{
-	$datEnd = [datetime]::Now;
-	Log-Debug -fn $fn -msg ("RET. fReturn: [{0}]. Execution time: [{1}]ms. Started: [{2}]." -f $fReturn, ($datEnd - $datBegin).TotalMilliseconds, $datBegin.ToString('yyyy-MM-dd HH:mm:ss.fffzzz')) -fac 2;
-}
-# END
-
-} # function
-
-if($MyInvocation.ScriptName) { Export-ModuleMember -Function Remove-WorkflowInstance; } 
-
-# 
-# Copyright 2014-2015 d-fens GmbH
-# 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-# http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# 
 
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUinvqKU2t9nTQwJkPtoItottF
-# 79OgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU2bEn2EAp8xgY2gZRNK99wqt1
+# QF6gghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -254,26 +282,26 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Remove-WorkflowInst
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTL763k+hWP+N1b
-# 3/aOWSmdFr8k7zANBgkqhkiG9w0BAQEFAASCAQC3ZDi+1Nl9j7cVZXHw/Kyhdgrx
-# bpuey0y/4S9Qn3V8ltFWaS/btbsaWPlxx+X6FBAZgPYvKma6IFHKeVnswU1hStt2
-# U1Gbp3hQxkLyMrJ1YUuJDlJbei9Z/JaBcTgEEsiD168Hy4bdkNy9J6cDGcooZc0I
-# L3KjhfLc5zmaq3YWyUBwlD6s3cPltqNXCOUTJkXItCgXB8A/tPbtmPYMQnq02RqN
-# keDVlIukgC74Tn1cKlKznSbw3jRhr2rHbKBJXe4Phptph5kuUNJfOt3n8Trac7nP
-# 2CU2TTu0+zFx9sdZAIPNIwxOVrsO665oPunSR9jmos3ZB1w6AdPhK1Hl01d0oYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBSWbdN3Pil0Cjcl
+# PLnLp8Memv75ZzANBgkqhkiG9w0BAQEFAASCAQAhBS8GeP00JrIxJX3FSwqBjN6C
+# kH1mFM5S/xf8Fvqp2p6X0nQVBZWudnzt/4l6qeRecSo9l/W9i8VoodlRAlOJm5nS
+# BVUVWmE8zhJ0GATTWu5ffEmktm1MjcUdtgkd9494zyE0RaAauLIT8fFDSoXOoUfv
+# dci5OenPfDyFDrbaiY4h0R1a02ZNFbk1XpI5YWj5bFO9DN5l/IXvvxvtdh96RE4l
+# /armtfUMOrJyM+XkDiNIyfO0OhDgYCjU/pY16k5hVvEPBW/zlGTl/ZvttCCXbBXK
+# nPkUlpXtTCMsQubSYJ/sX1H35GzhnBZhmg5og4tXqe2GNmthygjtzAAsB1gOoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTAyNzA4NDUyNlowIwYJKoZIhvcNAQkEMRYEFJrCIvR/2C+slpGqr0SayvbsjhB3
+# MTEyNzE4MjA0NlowIwYJKoZIhvcNAQkEMRYEFObBNiky4GUK2zTPFfL6EyvAawsl
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCcA/LqMp8S4R7Xg9tR
-# qqkrDkt4rdmSiZzcPKSi82hbMD/BPpnYzwuxhGS7U4TD0WlIK+5BJbklKRPz2YsY
-# Nr9pX3I7Q6tPH0NPjjqwhd0ywgfrO5yrWZOZNxPanjunuQ0UatDXKu5BI9rSfM6V
-# 37l/rR1ZQp2Z9468IMIW0E+KRDOFUG5NhD/69OuNTDw+nd7UGPrjoZs4X30e4qIS
-# oIja2DRgKgyZmektcInSDqF8UFYYdnoWFZjZl7TaB2z+9hg7BcCtGcURw6V8fdXS
-# QxjmTqKQvHdQSbYv2eq50I/mFT1yhYmgUdojmLhkXkFem6mGmV+/ERxA1Na0RQ9d
-# jw8k
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQAJe5lcuAU/tDah5YvI
+# gvBa5Y/fGdbGJq8Wolq4tER7y4pBagDVLqRO49MIEgT9XvtKxQsDc195GeKlhWfL
+# 5ZQguEdgLo7vKHlOsIYCd5N3PenXJCvtmHjWpQLhmeDDMKKr8EK/JLIZoLf7/7Qd
+# 31eLfj0IC4QIm0P4mO2qfTO0QcUDIswnPhDJm7V2OHk18FHmUldGUSDkTBzbjvQ1
+# 59WOKbxuT5Lhk2muByLaVPV2v/OeTJD4hJe0eqR5r2lTAd8r23vj4kAbG1fFLoJU
+# PaLvEwlwtJXw4cs1N0Gt3RU4baD6nnziLC1OkNa6AmIJfF6IaaNqLrwhXqA+Q1eX
+# mhmn
 # SIG # End signature block

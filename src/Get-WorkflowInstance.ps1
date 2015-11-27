@@ -19,22 +19,24 @@ See PARAMETER section for a description of input parameters.
 Get-WorkflowInstance -id "27741"
 
 id                   : 27741
-url                  : http://192.168.112.129:9000/activiti-rest/service/runtime/process-instances/27741
+url                  : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/27741
 businessKey          : Worker#1
 suspended            : False
 ended                : False
 completed            : False
 processDefinitionId  : createTimersProcess:1:31
-processDefinitionUrl : http://192.168.112.129:9000/activiti-rest/service/repository/process-definitions/createTimersProcess:1:31
+processDefinitionUrl : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/createTimersProcess:1:31
 activityId           :
 tenantId             :
 variables            : {}
 
 #>
 [CmdletBinding(
-	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/',
-    SupportsShouldProcess=$true,
-    ConfirmImpact="Low"
+	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
+	,
+    SupportsShouldProcess = $true
+	,
+    ConfirmImpact = 'Low'
 )]
 <#[OutputType([<Type>])]#>
 Param 
@@ -156,7 +158,7 @@ END
 if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstance; } 
 
 # 
-# Copyright 2014-2015 d-fens GmbH
+# Copyright 2015 d-fens GmbH
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -174,8 +176,8 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstanc
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUinvqKU2t9nTQwJkPtoItottF
-# 79OgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUsyH9xzPgnDq7J8TkzjSsd92K
+# 9wOgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -274,26 +276,26 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstanc
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTL763k+hWP+N1b
-# 3/aOWSmdFr8k7zANBgkqhkiG9w0BAQEFAASCAQC3ZDi+1Nl9j7cVZXHw/Kyhdgrx
-# bpuey0y/4S9Qn3V8ltFWaS/btbsaWPlxx+X6FBAZgPYvKma6IFHKeVnswU1hStt2
-# U1Gbp3hQxkLyMrJ1YUuJDlJbei9Z/JaBcTgEEsiD168Hy4bdkNy9J6cDGcooZc0I
-# L3KjhfLc5zmaq3YWyUBwlD6s3cPltqNXCOUTJkXItCgXB8A/tPbtmPYMQnq02RqN
-# keDVlIukgC74Tn1cKlKznSbw3jRhr2rHbKBJXe4Phptph5kuUNJfOt3n8Trac7nP
-# 2CU2TTu0+zFx9sdZAIPNIwxOVrsO665oPunSR9jmos3ZB1w6AdPhK1Hl01d0oYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBSDvNXJLS2FMj9m
+# 7nSLSh6zbm2f5zANBgkqhkiG9w0BAQEFAASCAQDISkChIWFHVnhT7Tp44+VzRa25
+# L87XvvhH4zGkiAvRw2KvsoXswp2QaNnbhNuNAkY5zBKPIuevtr7rwehK6QlVMFis
+# iqb1HOKjGXwQE40bq8G/uBrnaEA3yMGhA4E8bBApoh931VPpDwMoZmhje5qIDBA8
+# unuTn6s9dggbKatq7XQabuRgTWWUA5+DldX3Bz/qI0zvThSBLRBR2nRS9r9bondC
+# hKm2IQj1tyFSG0U5vKkAYuUXJyk0f/s7/jQ2bNnHe2ofkveo8jiiL92qp5qYw6cG
+# Fdu5J50t0N+qRYdgIlYWZcpcKxved/TktQlD/FMvG8nGUHb26bIqHFbIuhGwoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTAyNzA4NDUyNlowIwYJKoZIhvcNAQkEMRYEFJrCIvR/2C+slpGqr0SayvbsjhB3
+# MTEyNzE4MTgwM1owIwYJKoZIhvcNAQkEMRYEFE+WyG8KXIlIUqt/kNkYINMBpsSh
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCcA/LqMp8S4R7Xg9tR
-# qqkrDkt4rdmSiZzcPKSi82hbMD/BPpnYzwuxhGS7U4TD0WlIK+5BJbklKRPz2YsY
-# Nr9pX3I7Q6tPH0NPjjqwhd0ywgfrO5yrWZOZNxPanjunuQ0UatDXKu5BI9rSfM6V
-# 37l/rR1ZQp2Z9468IMIW0E+KRDOFUG5NhD/69OuNTDw+nd7UGPrjoZs4X30e4qIS
-# oIja2DRgKgyZmektcInSDqF8UFYYdnoWFZjZl7TaB2z+9hg7BcCtGcURw6V8fdXS
-# QxjmTqKQvHdQSbYv2eq50I/mFT1yhYmgUdojmLhkXkFem6mGmV+/ERxA1Na0RQ9d
-# jw8k
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQALCHMgvcY2MYVdJttA
+# 7wh9hyQUACf5jxbe0uDR/8aXIV7Zs9nCJuliFMV2NNn4sgikXWzGN0LKwlxcl7RP
+# 2OCv8CQ3NFplLfa4z8fqI++p3HxaPQjR/9ovkCiUvkw7O0LW6Dxab1L8Mda0DvAi
+# H7pVlO7VRdIrM6PzuIdEsqpg2dZ89f6kxiNWTAwqV5IveR1unJOh9DnmI5d6ikRa
+# P1szhqRt1SxJ4N/f21hyN/6VyRxzG+9rGQbsWQxKr9TR7xFa0fHfF+BRWdnZbmcG
+# XIWwRw3IHR5zaxVjml51Q1Ye3XkBHilwHZdQpvas5aONqcebAnOFMXaltZ7WAad4
+# myIj
 # SIG # End signature block
