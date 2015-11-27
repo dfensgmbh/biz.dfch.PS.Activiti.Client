@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>biz.dfch.PS.Activiti.Client</id>
-    <version>0.0.1</version>
+    <version>1.0.0</version>
     <title>biz.dfch.PS.Activiti.Client</title>
     <authors>d-fens GmbH</authors>
     <owners>d-fens GmbH</owners>
@@ -23,7 +23,7 @@ You can also download this module via [NuGet](http://nuget.org) with [Install-Pa
 See https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/wiki for a detailed description on how to use the Cmdlets in this module.
 </description>
     <summary>This Microsoft PowerShell module contains Cmdlets to perform various base actions and utility/convenience functions with Activiti 5.x REST API.</summary>
-    <releaseNotes>20151120
+    <releaseNotes>20151127
 
 * providing core functions / cmdlets
 * installation base path is '$env:ProgramFiles\WindowsPowerShell\Modules' and can be manually set as input parameter to Install.ps1</releaseNotes>
@@ -52,6 +52,5 @@ See https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/wiki for a detailed
     <file src="..\packages\biz.dfch.CS.Activiti.Client.1.0.0.0\lib\net45\biz.dfch.CS.Activiti.Client.dll" target="tools\biz.dfch.CS.Activiti.Client.dll" />
     <file src="..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll" target="tools\Newtonsoft.Json.dll" />
     <file src="..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.xml" target="tools\Newtonsoft.Json.xml" />
-    <file src="..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll" target="tools\System.Web.Http.dll" />
   </files>
 </package>
