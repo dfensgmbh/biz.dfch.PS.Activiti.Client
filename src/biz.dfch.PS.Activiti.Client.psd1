@@ -59,6 +59,8 @@ RequiredAssemblies = @(
 	'System.Web'
 	,
 	'System.Web.Extensions'
+	,
+	'System.Web.Http'
 )
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
@@ -119,6 +121,8 @@ FileList = @(
 	'Newtonsoft.Json.dll'
 	,
 	'Newtonsoft.Json.xml'
+	,
+	'System.Web.Http.dll'
 	,
 	'Import-Module.ps1'
 )

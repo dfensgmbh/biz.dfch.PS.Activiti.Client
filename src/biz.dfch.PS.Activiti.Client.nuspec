@@ -52,5 +52,6 @@ See https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/wiki for a detailed
     <file src="..\packages\biz.dfch.CS.Activiti.Client.1.0.0.0\lib\net45\biz.dfch.CS.Activiti.Client.dll" target="tools\biz.dfch.CS.Activiti.Client.dll" />
     <file src="..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll" target="tools\Newtonsoft.Json.dll" />
     <file src="..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.xml" target="tools\Newtonsoft.Json.xml" />
+    <file src="..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll" target="tools\System.Web.Http.dll" />
   </files>
 </package>
