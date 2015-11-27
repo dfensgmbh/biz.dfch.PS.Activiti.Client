@@ -2,7 +2,7 @@
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-Describe -Tags "Remove-WorkflowInstance" "Remove-WorkflowInstance" {
+Describe -Tags "Stop-WorkflowInstance" "Stop-WorkflowInstance" {
 
 	Mock Export-ModuleMember { return $null; }
 	
@@ -10,19 +10,19 @@ Describe -Tags "Remove-WorkflowInstance" "Remove-WorkflowInstance" {
 	
 	$svc = Enter-ActivitiServer;
 
-	Context "Remove-WorkflowInstance" {
+	Context "Stop-WorkflowInstance" {
 	
 		# Context wide constants
 		# N/A
 
-		It "CreateAndRemove-WorkflowInstance-ShouldReturnObject" -Test {
+		It "CreateAndStop-WorkflowInstance-ShouldReturnObject" -Test {
 			# Arrange
 			$defid = "createTimersProcess:1:31";
 			$vars = @{"duration"="long"; "throwException"="true"};
 			
 			# Act
 			$new = Invoke-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
-			Remove-WorkflowInstance -id $new.id -svc $svc;
+			Stop-WorkflowInstance -id $new.id -svc $svc;
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
 
 			# Assert
@@ -51,8 +51,8 @@ Describe -Tags "Remove-WorkflowInstance" "Remove-WorkflowInstance" {
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUjpp/AXRQGHWn4DlexTljdXza
-# PUugghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUY6DM3I4gAeS1PmU5ET52iMAu
+# G1egghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -151,26 +151,26 @@ Describe -Tags "Remove-WorkflowInstance" "Remove-WorkflowInstance" {
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRBWqMWyP2iaTg4
-# XKFGq/x7lXN3JjANBgkqhkiG9w0BAQEFAASCAQCgD4wpK9hKWlRn3lUnSdXhd/3j
-# P9bsxTofJg1yClw1n6GVQLfSLdgp1jHfH/Brkfw/71L/b0cgNgamVsRWkLo3EKXN
-# U9sHef56FvkP37KnjdgXV3SXYscXCDm/PIuxQVxbuiWScIPj1ySnIdDwOcMZYv7v
-# 7/tc/jgcmrj15Ftru9bU47DfI8lRgZxhhrJemfMKyYlM7Y+g4FcN3QcpG2ebRSna
-# 8Cx10vqw57Ltcg/4zEgZiG/obb/08XU6AUy/3hBhEbVCdaaWhAG64RGdVDCPly83
-# bYBRKEVZsfm3TxcfQA5zzmxklRVyb21E7GnLA7eSWigFU65zbFHCe9OMfOgDoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTRRwPgjHwN866z
+# WEq7iipEtS/28DANBgkqhkiG9w0BAQEFAASCAQB7eJa6UsQwrG8V/53histbyvBK
+# wyYkJMybSTI0AudqHoSXJLtHKyjPB61M24EeGJJc5SiHdBuZUQM1aw3uapnuULj6
+# uJRVEd9BE5d4LQTN+mJRAVUpumturwD2xvWQwA5OfFMb2/tc5b2mDWES+JIa0hLy
+# vgUEIGzYyFLdXwBuKkQzQcXI1QTpJ2R9gQMR6lub++f0HIQcAzPOe42YTkGkr+vh
+# 5zXDMaQ+5fDeHG6szR7EtSBji1xCaropvwPozWxPdZMlwACQzkmnHY0aNfKWoQHY
+# ybnKNjKJPSMTR0EHEq6dC9QCBAUjQLpEnLQ19L5axHy+9xnx+JNdLatgH7mIoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTAyODE0MjAxNFowIwYJKoZIhvcNAQkEMRYEFJq4WKsuvOerIxRBm/ExxnpYNZro
+# MTEyNzE4Mzk0MFowIwYJKoZIhvcNAQkEMRYEFNUFzZF2NKw5TVCV6WMlI/9Oxow9
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQAWcoSO3SPCmHsu2WHm
-# KwIYNzNfJstZKdk8Sha83VHfkIG2r9GAOGPGJxru27puRfQBZpM62oP71J5GZYjN
-# FWTHu1I4Dsxvv3ps8Oe9UAVl1aJX7nbxPzJaM5nXq8hX7M33P10xm7z/bGxSLH6/
-# urf2NFWKFpsKTj6YkqhPm3vJUqOH40CG2F2SBqRCeW1Key3e3VGaPLoYg8XrCjNf
-# JqrRkhLuhs9gawOLWXKlE7scH5Eliv3QxDu0xBX7hTSK1QzUa+s4uIRKBMeZW3AS
-# NVjVeWK4TS1UgMhBsU8PO9HHZdjRGtAjbU0QF3KS4uxHqmNd/QN1zNFWYH30Nykl
-# 0J9z
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQA3ahHAydVXJjeqp68j
+# tt/rkoA/cimTD2wOq5o8F1y/d2tixyc9XQce8tJaMfbnRGWvE1eUumhqh0URjiPY
+# UcgGiz1GwSgR8MR988eS2fcfUxY6FbIWcNiSWXTOR3RL2Mv8Xs96fGkPj+dAcWk0
+# GRvqzq93ANiVuYqfqJlp7kk01tueyi+jlUYlHbC6iQsAWa20XWYM+1anuurzmmDV
+# bBPj7ehuYQayuEJV+yvBwd9MxTWY6Dh08mhMEL5J7lIsLWwktEBrGfhxNMi51/fL
+# LRO+RqLab/bsJ3GPg1MyZNZibM53QWGY6MAcM9nC669bBr41xJRKAEqW3eedMlY6
+# 9zpq
 # SIG # End signature block

@@ -1,188 +1,57 @@
-function Enter-Server {
-<#
-.SYNOPSIS
-Performs a login to an Activiti server.
 
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-.DESCRIPTION
-Performs a login to an Activiti server. 
+Describe -Tags "Start-WorkflowInstance" "Start-WorkflowInstance" {
 
-This is the first Cmdlet to be executed and required for all other Cmdlets of this module. It creates service references to the routers of the application.
-
-
-.OUTPUTS
-This Cmdlet returns a ProcessEngine with references to the Activiti Server. On failure it returns $null.
-
-
-.INPUTS
-See PARAMETER section for a description of input parameters.
-
-
-.EXAMPLE
-$svc = Enter-Activiti;
-$svc
-
-ApplicationName			IsLoggedIn
----------------         ----------
-Worker#1                True
-
-Perform a login to an Activiti server with default credentials (current user) and against server defined within module configuration xml file.
-
-
-.LINK
-Online Version: http://dfch.biz/biz/dfch/PS/Activiti/Client/Enter-Server/
-
-
-.NOTES
-See module manifest for required software versions and dependencies at: 
-http://dfch.biz/biz/dfch/PS/Activiti/Client/biz.dfch.PS.Activiti.Client.psd1/
-
-
-#>
-[CmdletBinding(
-	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/Enter-Server/'
-)]
-<#[OutputType([<Type>])]#>
-Param 
-(
-	# [Optional] The ServerUri such as 'https://activiti/'. If you do not 
-	# specify this value it is taken from the module configuration file.
-	[Parameter(Mandatory = $false, Position = 0)]
-	[Uri] $ServerUri = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ServerUri
-	, 
-	# [Optional] The ApplicationName such as 'Worker#1'. If you do not 
-	# specify this value it is taken from the module configuration file.
-	[Parameter(Mandatory = $false, Position = 1)]
-	[string] $ApplicationName = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ApplicationName
-	, 
-	# Encrypted credentials as [System.Management.Automation.PSCredential] with 
-	# which to perform login. Default is credential as specified in the module 
-	# configuration file.
-	[Parameter(Mandatory = $false, Position = 2)]
-	[alias("cred")]
-	$Credential = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).Credential
-)
-
-BEGIN 
-{
-	$datBegin = [datetime]::Now;
-	[string] $fn = $MyInvocation.MyCommand.Name;
-	Log-Debug $fn ("CALL. ServerUri '{0}'; Username '{1}'" -f $ServerUri, $Credential.Username ) -fac 1;
-}
-# BEGIN 
-
-PROCESS 
-{
-
-[boolean] $fReturn = $false;
-
-try 
-{
-	# Parameter validation
-	# N/A
+	Mock Export-ModuleMember { return $null; }
 	
-	# Construction
-	$svc = New-Object biz.dfch.CS.Activiti.Client.ProcessEngine -ArgumentList $ServerUri, $ApplicationName;
+	. "$here\$sut"
 	
-	try 
-	{
-		# Logon service
-		$svc.Login($Credential);
-	} catch {
-		$msg = $_.Exception.Message;
-		$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $BrokeredMessage;
-		Log-Error $fn -msg $msg;
-		$PSCmdlet.ThrowTerminatingError($e);
-	}
+	$svc = Enter-ActivitiServer;
 
-	(Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine = $svc;
-	$OutputParameter = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine;
-	$fReturn = $true;
+	Context "Start-WorkflowInstance" {
+	
+		# Context wide constants
+		# N/A
 
-}
-catch 
-{
-	if($gotoSuccess -eq $_.Exception.Message) 
-	{
-			$fReturn = $true;
-	} 
-	else 
-	{
-		[string] $ErrorText = "catch [$($_.FullyQualifiedErrorId)]";
-		$ErrorText += (($_ | fl * -Force) | Out-String);
-		$ErrorText += (($_.Exception | fl * -Force) | Out-String);
-		$ErrorText += (Get-PSCallStack | Out-String);
-		
-		if($_.Exception -is [System.Net.WebException]) 
-		{
-			Log-Critical $fn "Login to Uri '$Uri' with Username '$Username' FAILED [$_].";
-			Log-Debug $fn $ErrorText -fac 3;
+		It "Start-WorkflowInstance-ShouldReturnObject" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:31";
+			$vars = @{"duration"="long"; "throwException"="true"};
+			
+			# Act
+			$result = Start-WorkflowInstance -id $defid -params $vars -svc $svc;
+
+			# Assert
+			$result | Should Not Be $null;
+			$defid -eq $result.processDefinitionId | Should Be $true;
 		}
-		else 
-		{
-			Log-Error $fn $ErrorText -fac 3;
-			if($gotoError -eq $_.Exception.Message) 
-			{
-				Log-Error $fn $e.Exception.Message;
-				$PSCmdlet.ThrowTerminatingError($e);
-			} 
-			elseif($gotoFailure -ne $_.Exception.Message) 
-			{ 
-				Write-Verbose ("$fn`n$ErrorText"); 
-			} 
-			else 
-			{
-				# N/A
-			}
-		}
-		$fReturn = $false;
-		$OutputParameter = $null;
+
 	}
 }
-finally 
-{
-	# Clean up
-	# N/A
-}
-return $OutputParameter;
 
-}
-# PROCESS
-
-END 
-{
-	$datEnd = [datetime]::Now;
-	Log-Debug -fn $fn -msg ("RET. fReturn: [{0}]. Execution time: [{1}]ms. Started: [{2}]." -f $fReturn, ($datEnd - $datBegin).TotalMilliseconds, $datBegin.ToString('yyyy-MM-dd HH:mm:ss.fffzzz')) -fac 2;
-}
-# END
-
-} # function
-
-Set-Alias -Name Connect- -Value 'Enter-Server';
-Set-Alias -Name Enter- -Value 'Enter-Server';
-if($MyInvocation.ScriptName) { Export-ModuleMember -Function Enter-Server -Alias Connect-, Enter-; } 
-
-# 
+#
 # Copyright 2015 d-fens GmbH
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# 
+#
 
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUNen4Ds+C24j/dqDdgeItsXy3
-# 4YagghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUbP9I0IjfDJc7BDD5O6IOgy9i
+# RvGgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -281,26 +150,26 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Enter-Server -Alias
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRuUs1yQFjgWEoW
-# aYh1+29KVhgMqDANBgkqhkiG9w0BAQEFAASCAQBgUu3QAHRpXePwZFVTK+0L+c6T
-# VKCW+ewEKRok3rKiXOkZZvLFG/blib8PXEpzqlT8t1B2n8DzUDFzlQKhKrFJHfk0
-# v/xGh4kDQTqJ+mfFf/GNoGixR5GE/ERf5YNBlyqRgAECTb6pNz/pPRLD47Zqk56y
-# HMUsObEZgqbFu+cz3uP7LeRvz/fsa55Ds/p44oijG6IYaFS8pkhK5isX9Nu10JX2
-# LqL6ZLaDBMOzMgwi0Z6w6JVARP1pKeR/EPLcjLPYTbRH/Mwt7g4mYpryp3RcJLNr
-# FeYqq4pvD+boo6bkBWj0UdORffww8HLN++Ku2FPd0dx9Jw8CjCcsJZ2y0SNvoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBSsf5KdMX80qXRd
+# hoxMCqQctFFlYjANBgkqhkiG9w0BAQEFAASCAQALSe0GBeTLS82liuIMPMLdg/GG
+# J12V7t5s15yL7NjQzN6ViY5MF1CIeQdArCNe5qgb9LfFp2/MjRIHgVmNW0LQPcLv
+# s5D2FvvFYCAg6ophQP+5xT527LdTDoUaiaY8kgRi8cPqdJ+u+JN2axCTDGKQCyF/
+# dm99BYEOnLWm9cDseHJULNg9dEr0MhOj8IZ+Twyop+5hFZi4Q6NDfb/ctMeQRn6M
+# Q8EJOS2Y6WKWQFH0zTtBbH8BWUWng7yGoE4kX/N0EIPXkDmAxAGBGCZOFtylxANN
+# +r5mJ4RUCiQFey0C7KCm1Ee7z4DaGUMZU+/ywOlLpM8/vNW4m3+Yy/tpE/bdoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTEyNzE4MzkzOFowIwYJKoZIhvcNAQkEMRYEFAjeqEJ9ZKXyqr1j2nSBVZNmYrPQ
+# MTEyNzE4MzkzOVowIwYJKoZIhvcNAQkEMRYEFINNaqLn3XFOndj+0kBUrzpuaQ4N
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCvvBjehkjBVWS2Tl16
-# TQD6BcIw27ArJtfM9MvVZWeNlWIQpCi1hgni5K8DfLG8ZOaHZoYqYn3OIgv7xnmo
-# 0p/GepWtE84ECa1ttZqlZRj/UeBAXF+s1GBUvEk9VBWmUeGlqIz+edPYeIio7rMl
-# GP/YK4ZLBb5Zkxuf8KKEp7zjt81+JLhFK/BIsxuzi3DdemnguoMjKLoKqkIpsGTu
-# O40QokaY2nfDzPCEfX1QbNukQdhmbr+B9oCTe5Uod6YIMro5SSyjcedWFxzzKKSE
-# +5iuVDVC7S+ULWuCg3aac1q3f8gbDJQagTfSNcFWXVt1Z+cNh18lOe6KyOD1+QfN
-# YEaZ
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQAppshyL9AdpzU3/XgQ
+# FCPPX7miIgz0+NeUKSszEpUdx2VOCvHR1igbkpd91woeJJ2ZsKvEPF8K3nheURzJ
+# FTeS1Xn/wcZQ6zGfhYLCUTJvAYHZ+nbSx7AjPuH5vFPVHn3X8xKsUuBNJOSpcHN4
+# 8yMxuEt1iKC8tTjHnjl9xu3WGyAlk4yRZuvAAxD2W/kAjVAcPP+hwVBwSvW3W2Pk
+# cQHXQXosWGWE4qvEXUALwqLbrM3duCpXX0deZzuwANcd5B189sbzdXe20qyi+3+5
+# dDaTAiNon3oMzq5GwVYW6YNSYl6bLd+VdEGBqyKtPKvNpyr/NeWNS1n1FtG05r7K
+# hhJj
 # SIG # End signature block
