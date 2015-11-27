@@ -26,7 +26,7 @@ Describe -Tags "Remove-WorkflowInstance" "Remove-WorkflowInstance" {
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
 
 			# Assert
-			$result | Should Be $null;
+			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
 		}
 
 	}

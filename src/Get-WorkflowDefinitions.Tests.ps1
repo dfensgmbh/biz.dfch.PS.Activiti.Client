@@ -24,7 +24,6 @@ Describe -Tags "Get-WorkflowDefinitions" "Get-WorkflowDefinitions" {
 
 			# Assert
 			$result | Should Not Be $null;
-			#0 -lt $result.size | Should Be $true;
 			0 -lt $result.Count | Should Be $true;
 		}
 
