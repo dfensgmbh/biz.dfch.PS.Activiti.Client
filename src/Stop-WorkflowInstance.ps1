@@ -73,12 +73,10 @@ try
 		if($PSCmdlet.ShouldProcess($Object)) {
 
 			# Call method
-			$ProcessEngine.DeleteWorkflowInstance($Object.ToString());
+			$fReturn = $ProcessEngine.DeleteWorkflowInstance($Object.ToString());
 
 		} # if
 	} # foreach
-
-	$fReturn = $true;
 
 }
 catch 
@@ -126,6 +124,7 @@ finally
 	# N/A
 }
 #return $OutputParameter;
+return $fReturn;
 # N/A
 
 }
