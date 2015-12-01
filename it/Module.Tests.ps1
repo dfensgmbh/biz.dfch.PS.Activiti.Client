@@ -60,7 +60,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		}
 	}
 	
-	Context "Activiti.Login" {
+	Context "#CLOUDTCL-1896-ActivitiLogin" {
 
 		It "Activiti-LoginSucceeds" -Test {
 		
@@ -160,7 +160,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		}
 	}
 
-	Context "Activiti.WorkflowDefinition" {
+	Context "CLOUDTCL-1897-ActivitiWorkflowDefinition" {
 	
 		BeforeEach {
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
@@ -248,7 +248,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 	}
 	
 	
-	Context "Activiti.Workflowstatus"{
+	Context "CLOUDTCL-1898-ActivitiWorkflowstatus"{
 	
 		BeforeEach {
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
@@ -318,7 +318,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		}		
 	}
 	
-	Context "Activiti.CancelWorkflow"{
+	Context "CLOUDTCL-1899-ActivitiCancelWorkflow"{
 	
 		BeforeEach {
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
@@ -439,6 +439,11 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			
 			# Assert
 			$result | Should Be $false;
+		}
+		
+		
+		Context "ActivitiPlayPause"{
+		
 		}
 	}
 }
