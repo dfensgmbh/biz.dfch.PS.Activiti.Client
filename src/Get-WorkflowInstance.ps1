@@ -111,6 +111,13 @@ BEGIN
 	$datBegin = [datetime]::Now;
 	[string] $fn = $MyInvocation.MyCommand.Name;
 	Log-Debug $fn ("CALL.") -fac 1;
+	
+	# ProcessEngine validation
+	if($ProcessEngine -isnot [System.Object]) {
+		$msg = "Activiti: ProcessEngine validation FAILED. Connect to the server before using the Cmdlet.";
+		$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $ProcessEngine;
+		$PSCmdlet.ThrowTerminatingError($e);
+	} # if	
 }
 # BEGIN 
 
