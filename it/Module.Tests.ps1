@@ -270,9 +270,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$result | Should Not Be $null;
 			0 -lt $result.id | Should Be $true;
 			$result.id | Should Be $new.id;
-			$result.suspended | Should Be $false;
-			$result.ended | Should Be $false;
-			$result.completed | Should Be $false;
+			$result.suspended | Should Be 'False';
+			$result.ended | Should Be 'False';
+			$result.completed | Should Be 'False';
 		}
 		
 		It "Get-WorkflowInstanceOfNonExistingWorkflow-Fails" -Test {
@@ -302,18 +302,18 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			# Assert result1
 			$result1 | Should Not Be $null;
 			0 -lt $result1.id | Should Be $true;
-			$result1.id -eq $new.id | Should Be $true;
-			$result1.suspended | Should Be $false;
-			$result1.ended | Should Be $false;
-			$result1.completed | Should Be $false;
+			$result1.id | Should Be $new.id;
+			$result1.suspended | Should Be 'False';
+			$result1.ended | Should Be 'False';
+			$result1.completed | Should Be 'False';
 			
 			# Assert result2
 			$result2 | Should Not Be $null;
 			0 -lt $result2.id | Should Be $true;
-			$result2.id -eq $new.id | Should Be $true;
-			$result2.suspended | Should Be $false;
-			$result2.ended | Should Be $true;
-			$result2.completed | Should Be $true;
+			$result2.id | Should Be $new.id;
+			$result2.suspended | Should Be 'False';
+			$result2.ended | Should Be 'True';
+			$result2.completed | Should Be 'True';
 			
 		}		
 	}
