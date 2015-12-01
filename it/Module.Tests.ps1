@@ -398,14 +398,14 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
 			Start-Sleep 30 # workflow should end in an exception after 10 seconds.
 			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
-			$ret | Should Be $false;
+			$ret | Should Be $true; #Failed workflow can be cancelled
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
 
 			# Assert
 			$result | Should Not Be $null;
 			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
 			$result.id | Should Be $new.id;
-			$result.suspended | Should Be 'True';
+			$result.suspended | Should Be 'False';
 			$result.ended | Should Be 'True';
 			$result.completed | Should Be 'True';
 		}
@@ -441,10 +441,6 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$result | Should Be $false;
 		}
 		
-		
-		Context "ActivitiPlayPause"{
-		
-		}
 	}
 }
 
