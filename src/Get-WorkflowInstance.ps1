@@ -17,7 +17,6 @@ See PARAMETER section for a description of input parameters.
 
 .EXAMPLE
 Get-WorkflowInstance -id "27741"
-
 id                   : 27741
 url                  : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/27741
 businessKey          : Worker#1
@@ -30,6 +29,52 @@ activityId           :
 tenantId             :
 variables            : {}
 
+.EXAMPLE
+
+Retrieves the first 2 running instances from Activiti. Not specifing id is the same as you would specify the 'ListAvailable' parameter.
+
+PS> Get-WorkflowInstance | Select -First 2
+id                     : 936
+url                    : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/936
+businessKey            :
+suspended              : False
+ended                  : False
+completed              : False
+processDefinitionId    : fixSystemFailure:1:37
+processDefinitionUrl   : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/fixSystemFailure:1:37
+activityId             : taskAfterTimer
+tenantId               :
+variables              : {}
+startUserId            :
+startActivityId        :
+endActivityId          :
+deleteReason           :
+startTime              :
+endTime                :
+superProcessInstanceId :
+durationInMillis       : 0
+
+id                     : 951
+url                    : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/951
+businessKey            :
+suspended              : False
+ended                  : False
+completed              : False
+processDefinitionId    : escalationExample:1:35
+processDefinitionUrl   : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/escalationExample:1:3
+activityId             : handleEscalation
+tenantId               :
+variables              : {}
+startUserId            :
+startActivityId        :
+endActivityId          :
+deleteReason           :
+startTime              :
+endTime                :
+superProcessInstanceId :
+durationInMillis       : 0
+
+
 #>
 [CmdletBinding(
 	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
@@ -37,17 +82,23 @@ variables            : {}
     SupportsShouldProcess = $true
 	,
     ConfirmImpact = 'Low'
+	,
+	DefaultParameterSetName = 'list'
 )]
 <#[OutputType([<Type>])]#>
 Param 
 (
 	# Specifies a reference to a existing workflow instance
-	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)]
+	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0, ParameterSetName = 'name')]
 	[ValidateNotNullorEmpty()]
 	[Alias("WorkflowId")]
 	[Alias("workflow")]
 	[Alias("id")]
 	$InputObject
+	,
+	# Specifies to return all existing workflow instances
+	[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'list')]
+	[switch] $ListAvailable = $false
 	,
 	# Specifies a references to the Activiti client
 	[Parameter(Mandatory = $false, Position = 1)]
@@ -73,26 +124,37 @@ try
 	# Parameter validation
 	# N/A
 	
-	# Get ValueFromPipeline
-	$OutputObject = @();	
-	foreach($Object in $InputObject) {
-		if($PSCmdlet.ShouldProcess($Object)) {
-
-			# Call method
-			$OutputParameter = $ProcessEngine.GetWorkflowInstance($Object.ToString(), $true);
-			$OutputObject += $OutputParameter;
-
-		} # if
-	} # foreach
-	
-	# Set output depending is ValueFromPipeline
-	if ( $OutputObject.Count -gt 1 )
+	if($PSCmdlet.ParameterSetName -eq 'list') 
 	{
-		$OutputParameter = $OutputObject[0];
-	}
-	else
-	{
-		$OutputParameter = $OutputObject;
+		$OutputParameter = $ProcessEngine.GetWorkflowInstances();
+		if ( $OutputParameter -ne $null )
+		{
+			$OutputParameter = $OutputParameter | Select -ExpandProperty data;
+		}
+	} 
+	else 
+	{	
+		# Get ValueFromPipeline
+		$OutputObject = @();	
+		foreach($Object in $InputObject) {
+			if($PSCmdlet.ShouldProcess($Object)) {
+
+				# Call method
+				$OutputParameter = $ProcessEngine.GetWorkflowInstance($Object.ToString(), $true);
+				$OutputObject += $OutputParameter;
+
+			} # if
+		} # foreach
+		
+		# Set output depending is ValueFromPipeline
+		if ( $OutputObject.Count -gt 1 )
+		{
+			$OutputParameter = $OutputObject[0];
+		}
+		else
+		{
+			$OutputParameter = $OutputObject;
+		}
 	}
 	$fReturn = $true;
 

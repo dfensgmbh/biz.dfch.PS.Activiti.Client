@@ -74,8 +74,6 @@ NestedModules = @(
 	,
 	'Start-WorkflowInstance.ps1'
 	,
-	'Get-WorkflowInstances.ps1'
-	,
 	'Get-WorkflowInstance.ps1'
 	,
 	'Stop-WorkflowInstance.ps1'
