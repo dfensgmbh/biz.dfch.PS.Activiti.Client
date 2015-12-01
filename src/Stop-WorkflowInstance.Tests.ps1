@@ -17,11 +17,11 @@ Describe -Tags "Stop-WorkflowInstance" "Stop-WorkflowInstance" {
 
 		It "CreateAndStop-WorkflowInstance-ShouldReturnObject" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:31";
+			$defid = "createTimersProcess:1:36";
 			$vars = @{"duration"="long"; "throwException"="true"};
 			
 			# Act
-			$new = Invoke-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
 			Stop-WorkflowInstance -id $new.id -svc $svc;
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
 

@@ -17,7 +17,7 @@ Describe -Tags "Start-WorkflowInstance" "Start-WorkflowInstance" {
 
 		It "Start-WorkflowInstance-ShouldReturnObject" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:31";
+			$defid = "createTimersProcess:1:36";
 			$vars = @{"duration"="long"; "throwException"="true"};
 			
 			# Act

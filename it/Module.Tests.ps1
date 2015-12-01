@@ -161,7 +161,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		}
 	}
 
-	Context "Activit.WorkflowDefinition" {
+	Context "Activiti.WorkflowDefinition" {
 	
 		BeforeEach {
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
@@ -180,6 +180,8 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$wfds.Count -gt 0 | Should Be $true;
 		}
 
+		
+			 
 		It "GetWorkflowDefinition-WithNullProcessEngineThrowsException" -Test {
 		
 			# Arrange
@@ -243,6 +245,217 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			
 			# Assert
 			$wfd.url.StartsWith($biz_dfch_PS_Activiti_Client.ServerUri.AbsoluteUri) | Should Be $true;
+		}
+	}
+	
+	
+	Context "Activiti.Workflowstatus"{
+	
+	BeforeEach {
+			$moduleName = 'biz.dfch.PS.Activiti.Client';
+			Remove-Module $moduleName -ErrorAction:SilentlyContinue;
+			Import-Module $moduleName;
+			$svc = Enter-Activiti -Credential $cred;
+		}
+		
+		It "CreateAndGet-WorkflowInstance-Succeeds" -Test {
+			# Arrange
+			$defid = "UserTaskToDone:1:1510";
+			$vars = @{};
+			
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc
+			
+			# Assert
+			$result | Should Not Be $null;
+			0 -lt $result.id | Should Be $true;
+			$result.id -eq $new.id | Should Be $true;
+			$result.suspended | Should Be $false;
+			$result.ended | Should Be $false;
+			$result.completed | Should Be $false;
+		}
+		
+		
+		It "Get-WorkflowInstanceOfNonExistingWorkflow-Fails" -Test {
+			# Arrange
+						
+			# Act
+			$result = Get-ActivitiWorkflowInstance -id 0 -svc $svc
+			
+			# Assert
+			$result | Should Be $null;
+			
+		}
+		
+		
+		It "CreateAndGetCompleted-WorkflowInstance-Succeeds" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="short"; "throwException"="false"};
+			
+			
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			
+			$result1 = Get-ActivitiWorkflowInstance -id $new.id -svc $svc
+			Start-Sleep 15
+			$result2 = Get-ActivitiWorkflowInstance -id $new.id -svc $svc
+			
+			# Assert result1
+			$result1 | Should Not Be $null;
+			0 -lt $result1.id | Should Be $true;
+			$result1.id -eq $new.id | Should Be $true;
+			$result1.suspended | Should Be $false;
+			$result1.ended | Should Be $false;
+			$result1.completed | Should Be $false;
+			
+			# Assert result2
+			$result2 | Should Not Be $null;
+			0 -lt $result2.id | Should Be $true;
+			$result2.id -eq $new.id | Should Be $true;
+			$result2.suspended | Should Be $false;
+			$result2.ended | Should Be $true;
+			$result2.completed | Should Be $true;
+			
+		}		
+	}
+	
+	Context "Activiti.CacnelWorkflow"{
+	
+		BeforeEach {
+			$moduleName = 'biz.dfch.PS.Activiti.Client';
+			Remove-Module $moduleName -ErrorAction:SilentlyContinue;
+			Import-Module $moduleName;
+			$svc = Enter-Activiti -Credential $cred;
+		}
+		
+		It "CancelInvokedWorkflowInstance-Succeeds" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="long"; "throwException"="false"};
+			
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+
+			# Assert
+			$result | Should Not Be $null;
+			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
+			$result.id -eq $new.id | Should Be $true;
+			# Are these states correct?
+			$result.suspended | Should Be $false;
+			$result.ended | Should Be $true;
+			$result.completed | Should Be $true;
+			
+		}
+		
+			
+		It "CancelSuspendedWorkflowInstance-Succeeds" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="long"; "throwException"="false"};
+			
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+
+			
+			# Assert
+			$result | Should Not Be $null;
+			$ret | Should Be $true;
+			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
+			$result.id -eq $new.id | Should Be $true;
+			# Are these states correct?
+			$result.suspended | Should Be $false;
+			$result.ended | Should Be $true;
+			$result.completed | Should Be $false;
+			
+			
+		}
+		
+		It "CancelCompletedWorkflowInstance-Fails" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="short"; "throwException"="false"};
+			
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			Start-Sleep 15
+			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+
+			
+			# Assert
+			$result | Should Not Be $null;
+			$ret | Should Be $false;
+			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
+			$result.id -eq $new.id | Should Be $true;
+			# Are these states correct?
+			$result.suspended | Should Be $true;
+			$result.ended | Should Be $true;
+			$result.completed | Shouldc Be $true;
+			
+			
+		}
+		
+		It "CancelFailedWorkflowInstance-Fails" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="short"; "throwException"="true"};
+					
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			Start-Sleep 15 # workflow should end in an exception after 10 seconds.
+			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+
+			
+			# Assert
+			$result | Should Not Be $null;
+			$ret | Should Be $false;
+			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
+			$result.id -eq $new.id | Should Be $true;
+			# Are these states correct?
+			$result.suspended | Should Be $true;
+			$result.ended | Should Be $true;
+			$result.completed | Shouldc Be $true;
+			
+		}
+		
+		It "CancelEndedWorkflowInstance-Fails" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="short"; "throwException"="false"};
+					
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			Start-Sleep 15 # workflow should end in an exception after 10 seconds.
+			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+
+			
+			# Assert
+			$result | Should Not Be $null;
+			$ret | Should Be $false;
+			$result.deleteReason | Should Be '';
+			$result.id -eq $new.id | Should Be $true;
+			# Are these states correct?
+			$result.suspended | Should Be $false;
+			$result.ended | Should Be $true;
+			$result.completed | Shouldc Be $true;
+			
+			
+		}
+		
+		It "CancelNonExistingWorkflowInstance-Fails" -Test {
+			# Arrange
+			
+			# Act			
+				$result = Stop-ActivitiWorkflowInstance -id 0 -svc $svc;
+				$result | Should Be $false
 		}
 	}
 }

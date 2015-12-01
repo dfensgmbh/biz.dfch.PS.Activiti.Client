@@ -17,16 +17,53 @@ Describe -Tags "Get-WorkflowInstance" "Get-WorkflowInstance" {
 
 		It "CreateAndGet-WorkflowInstance-ShouldReturnObject" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:31";
+			$defid = "createTimersProcess:1:36";
 			$vars = @{"duration"="long"; "throwException"="true"};
 			
 			# Act
-			$new = Invoke-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
 			$result = Get-WorkflowInstance -id $new.id -svc $svc;
 
 			# Assert
 			$result | Should Not Be $null;
 			$defid -eq $result.processDefinitionId | Should Be $true;
+		}
+
+	}
+	
+	Context "Get-WorkflowInstances" {
+	
+		# Context wide constants
+		# N/A
+
+		It "CreateAndGet-WorkflowInstances-ShouldReturnObject" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="long"; "throwException"="true"};
+			
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			$result = Get-WorkflowInstance -ListAvailable -svc $svc;
+
+			# Assert
+			$result | Should Not Be $null;
+			0 -lt $result.Count | Should Be $true;
+		}
+		
+		It "CreateAndGet-100xWorkflowInstances-ShouldReturnObject" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="long"; "throwException"="true"};
+			$instances = 100;
+			
+			# Act
+			$new = 1..$instances | % { Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc };
+			$result = Get-WorkflowInstance -ListAvailable -svc $svc;
+
+			# Assert
+			$result | Should Not Be $null;
+			$new.Count -eq $instances | Should Be $true;
+			$result.Count -ge $instances | Should Be $true;
 		}
 
 	}
