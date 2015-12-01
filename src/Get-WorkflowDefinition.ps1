@@ -52,12 +52,28 @@ startFormDefined         : False
 #>
 [CmdletBinding(
 	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
+	,
+    SupportsShouldProcess = $true
+	,
+    ConfirmImpact = 'Low'
+	,
+	DefaultParameterSetName = 'list'
 )]
 <#[OutputType([<Type>])]#>
 Param 
 (
+	# Specifies a workflow definition id
+	[Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'name')]
+	[Alias("id")]
+	[Alias("key")]
+	$InputObject
+	,
+	# Specifies to return all existing workflow instances
+	[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'list')]
+	[switch] $ListAvailable = $false
+	,
 	# Specifies a references to the Activiti client
-	[Parameter(Mandatory = $false)]
+	[Parameter(Mandatory = $false, Position = 2)]
 	[Alias("svc")]
 	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
 )
@@ -67,6 +83,13 @@ BEGIN
 	$datBegin = [datetime]::Now;
 	[string] $fn = $MyInvocation.MyCommand.Name;
 	Log-Debug $fn ("CALL.") -fac 1;
+		
+	# ProcessEngine validation
+	if($ProcessEngine -isnot [System.Object]) {
+		$msg = "Activiti: ProcessEngine validation FAILED. Connect to the server before using the Cmdlet.";
+		$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $ProcessEngine;
+		$PSCmdlet.ThrowTerminatingError($e);
+	} # if	
 }
 # BEGIN 
 
@@ -82,10 +105,40 @@ try
 	# N/A
 	
 	# Call method
-	$OutputParameter = $ProcessEngine.GetWorkflowDefinitions();
-	if ( $OutputParameter -ne $null ) 
+	$WorkflowDefinitionList = $ProcessEngine.GetWorkflowDefinitions();
+	if ( $WorkflowDefinitionList -ne $null ) 
 	{
-		$OutputParameter = $OutputParameter | Select -ExpandProperty data;	
+		$WorkflowDefinitionList = $WorkflowDefinitionList | Select -ExpandProperty data;
+		
+		# Call method
+		if($PSCmdlet.ParameterSetName -eq 'name') 
+		{
+			# Get ValueFromPipeline
+			$OutputObject = @();	
+			foreach($Object in $InputObject) {
+				if($PSCmdlet.ShouldProcess($Object)) {
+
+					# Call method
+					$OutputParameter = $WorkflowDefinitionList | Where { $_.id -eq $Object -or $_.key -eq $Object };
+					$OutputObject += $OutputParameter;
+
+				} # if
+			} # foreach
+			
+			# Set output depending is ValueFromPipeline
+			if ( $OutputObject.Count -gt 1 )
+			{
+				$OutputParameter = $OutputObject[0];
+			}
+			else
+			{
+				$OutputParameter = $OutputObject;
+			}	
+		} 
+		else
+		{
+			$OutputParameter = $WorkflowDefinitionList;
+		}
 	}
 	$fReturn = $true;
 
