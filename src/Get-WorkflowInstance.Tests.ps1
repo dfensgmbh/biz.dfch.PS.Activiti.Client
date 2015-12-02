@@ -17,16 +17,53 @@ Describe -Tags "Get-WorkflowInstance" "Get-WorkflowInstance" {
 
 		It "CreateAndGet-WorkflowInstance-ShouldReturnObject" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:31";
+			$defid = "createTimersProcess:1:36";
 			$vars = @{"duration"="long"; "throwException"="true"};
 			
 			# Act
-			$new = Invoke-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
 			$result = Get-WorkflowInstance -id $new.id -svc $svc;
 
 			# Assert
 			$result | Should Not Be $null;
 			$defid -eq $result.processDefinitionId | Should Be $true;
+		}
+
+	}
+	
+	Context "Get-WorkflowInstances" {
+	
+		# Context wide constants
+		# N/A
+
+		It "CreateAndGet-WorkflowInstances-ShouldReturnObject" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="long"; "throwException"="true"};
+			
+			# Act
+			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			$result = Get-WorkflowInstance -ListAvailable -svc $svc;
+
+			# Assert
+			$result | Should Not Be $null;
+			0 -lt $result.Count | Should Be $true;
+		}
+		
+		It "CreateAndGet-100xWorkflowInstances-ShouldReturnObject" -Test {
+			# Arrange
+			$defid = "createTimersProcess:1:36";
+			$vars = @{"duration"="long"; "throwException"="true"};
+			$instances = 100;
+			
+			# Act
+			$new = 1..$instances | % { Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc };
+			$result = Get-WorkflowInstance -ListAvailable -svc $svc;
+
+			# Assert
+			$result | Should Not Be $null;
+			$new.Count -eq $instances | Should Be $true;
+			$result.Count -ge $instances | Should Be $true;
 		}
 
 	}
@@ -51,8 +88,8 @@ Describe -Tags "Get-WorkflowInstance" "Get-WorkflowInstance" {
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU5AtEQhtfhKqsaDpjhp8GDYxK
-# S9SgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUktT6Uz9VAlB2zIu10I0Z460U
+# WzigghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -151,26 +188,26 @@ Describe -Tags "Get-WorkflowInstance" "Get-WorkflowInstance" {
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBR+nYqGNgN89EH8
-# y7FWP8AMPFJxTzANBgkqhkiG9w0BAQEFAASCAQAs+3dCqhm/C4ip1Tf8Mj5HMcRK
-# 5V2IwVwYF3VoA4yKqdHGppL6oYTr77QRrHrMG1bmoyA5oRDc1a+qKdTj1e1I8DCZ
-# gYW6ld2lQzbJ+N/sF6Z2VIgcqnOKxqzHyxnrneUUuaj0pXaMQm/AlfQKTNU+vJTm
-# LXZZXJY5+Qj4CF7I2lSJmXMm123ViHxC/iTdrVUetDrGVqyC3BlCkU4zq1I+qh93
-# sgaoFQxCDp8KiP4RxQtmrDg3Isj8buiYwZSNBdG6Ap1k3XCqRCCQu1zDZHm7xhPq
-# v4WoPoiCa2TD8g4thET2PV1lxde/XjkdecCPNH6YsPkzZktmjjHijwl15MyroYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRL/nYJn6P+84Eu
+# +frd//pTzt/pJTANBgkqhkiG9w0BAQEFAASCAQB//B97u2kFWaaDGeR3ZR7bLVG4
+# cCKyNrmNvR1nKNPGRoxJeTm8a/SVMsYs1gInQDUbruXTzZLYcrHyN4hhUB2aZk+z
+# PMqY/k1185k6dpCHQGAKPVUXF+MDcBit+06X/vsT3P1lC1B9Lm5TxaZryGA0K/Qh
+# mhYX9G2aGtw9mkGuZI0bBJmNUHl4R23/j4dySez3tRkUy0auQPTdjE1XnqfSt4Nb
+# lpLlYC7y0Foxog6LceE/BhGBm0yIsMxy8F6AzBoa+SyzdI3jAwSG50RoXvTxtRxK
+# jS6D0yvwOc6YExI0JifZnm5UrjkYS0bHOAnf5gzf2wX8ZF9IZme9LnkqnJjIoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTEyNzE4MTgwNFowIwYJKoZIhvcNAQkEMRYEFLUxqbKVL/Joeegiu5oYgkQ3+jAK
+# MTIwMjA0MzM0MlowIwYJKoZIhvcNAQkEMRYEFJuVftjTQ5st2iNaQJU/GIQFnagV
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQBYuUDh5kKoDFyT7rfV
-# w7I8HFnXlPV8TB/70UkHmV33UgEfFhg/jMJ5bBVnV2/9Qj5uADlQcC59dfLf0Bsh
-# raZoy+Lh6kOw1aBtaFzYyIiTiAAyjCUdcy66V/jubuJGT8mrd4S6mNqScXwCHKGR
-# ZXKCFRte+hBeT6xYu5PdHQBjP1VtHVYnygx77uPlfYWh7PkNOde8s1lSsfC8awY5
-# xeJZxdUUZZGt6RJvBIvJ8sl20RjPunS6Am5oUVDQxdYSEUdR4x6aiBbSwBMmauRj
-# dOC67VyI7vaR6c8xj4keqZpsw3UDDD83rZouKDp+3Q8ZcdqhNMVxws9y2+IvlUIR
-# wx4H
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQBbxDIpk98ZuaQIjy9m
+# gECYdpRHHQehMJPnXmgwkxWD0PS2SvJNV8URg2qbQCGaFYjIXJZGG8W+r7G46Rgi
+# k3OglGnfOw6WThTIjasADMucZDVtTvFkrbgSnA5z3T0QItdhhocA/lTRtWbWS0pF
+# GtcpkfNRmBD8NTb7NhbM3eDYmXh09Wzt/V8CDszBD/YQhIj2SxT47rtyiU6NJ/T0
+# sTmAjwPHFaC1CGIwmfbliy2wgJu3pon6IrmAfN4tWm7qPVNaezFETcos6StvzGvy
+# Uqvbp1BwGAqwORx6NhsWdDXI1KNZj7PvijvyeEQ176Ft3QnXEO/VszsAG97saluD
+# KRwP
 # SIG # End signature block

@@ -52,12 +52,28 @@ startFormDefined         : False
 #>
 [CmdletBinding(
 	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
+	,
+    SupportsShouldProcess = $true
+	,
+    ConfirmImpact = 'Low'
+	,
+	DefaultParameterSetName = 'list'
 )]
 <#[OutputType([<Type>])]#>
 Param 
 (
+	# Specifies a workflow definition id
+	[Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'name')]
+	[Alias("id")]
+	[Alias("key")]
+	$InputObject
+	,
+	# Specifies to return all existing workflow instances
+	[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'list')]
+	[switch] $ListAvailable = $false
+	,
 	# Specifies a references to the Activiti client
-	[Parameter(Mandatory = $false)]
+	[Parameter(Mandatory = $false, Position = 2)]
 	[Alias("svc")]
 	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
 )
@@ -67,6 +83,13 @@ BEGIN
 	$datBegin = [datetime]::Now;
 	[string] $fn = $MyInvocation.MyCommand.Name;
 	Log-Debug $fn ("CALL.") -fac 1;
+		
+	# ProcessEngine validation
+	if($ProcessEngine -isnot [System.Object]) {
+		$msg = "Activiti: ProcessEngine validation FAILED. Connect to the server before using the Cmdlet.";
+		$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $ProcessEngine;
+		$PSCmdlet.ThrowTerminatingError($e);
+	} # if	
 }
 # BEGIN 
 
@@ -82,10 +105,40 @@ try
 	# N/A
 	
 	# Call method
-	$OutputParameter = $ProcessEngine.GetWorkflowDefinitions();
-	if ( $OutputParameter -ne $null ) 
+	$WorkflowDefinitionList = $ProcessEngine.GetWorkflowDefinitions();
+	if ( $WorkflowDefinitionList -ne $null ) 
 	{
-		$OutputParameter = $OutputParameter | Select -ExpandProperty data;	
+		$WorkflowDefinitionList = $WorkflowDefinitionList | Select -ExpandProperty data;
+		
+		# Call method
+		if($PSCmdlet.ParameterSetName -eq 'name') 
+		{
+			# Get ValueFromPipeline
+			$OutputObject = @();	
+			foreach($Object in $InputObject) {
+				if($PSCmdlet.ShouldProcess($Object)) {
+
+					# Call method
+					$OutputParameter = $WorkflowDefinitionList | Where { $_.id -eq $Object -or $_.key -eq $Object };
+					$OutputObject += $OutputParameter;
+
+				} # if
+			} # foreach
+			
+			# Set output depending is ValueFromPipeline
+			if ( $OutputObject.Count -gt 1 )
+			{
+				$OutputParameter = $OutputObject[0];
+			}
+			else
+			{
+				$OutputParameter = $OutputObject;
+			}	
+		} 
+		else
+		{
+			$OutputParameter = $WorkflowDefinitionList;
+		}
 	}
 	$fReturn = $true;
 
@@ -169,8 +222,8 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowDefinit
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUiqRV6OAX+ilVObyacArCjkrk
-# 8xOgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUX7SN3MMgXsNAJ264z/KuXMxD
+# zNagghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -269,26 +322,26 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowDefinit
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBQ9O+a7oLSiOf4X
-# RE/10s9DUQNz0zANBgkqhkiG9w0BAQEFAASCAQAdwsP2Xve8Cq7XAwgc0g0CeALZ
-# olbFUFAqImFLPoQwmwhy01W4wnut8a3IqHObWqWQfO2jEsa0AUPuiDeHpqUQvs/+
-# DCfXHnyItUJ6zhGImkLePQFbh6fMdTf9Qvp3z01SxOzX04CI0NS8BUMOvXrh07xS
-# 42pT0H4EIlGJfNj7MV2S1fH2LFZ2H1z3a2uBUVNggZEszJk6zfKCQje9XhDgj7jZ
-# ng/jJj9oUZnZrBpWiBfmt4uZrzK55/imrDMM1SiCb/NZx208a6CBwgmsWttk6ng9
-# VpLPOzGMckdubi9O0NQdejVhktFxuE96rg6tHfAUyOmAujrHdr48mJoIB1c4oYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTv0h1lseuwpYpe
+# kU91b6kFQQhOrDANBgkqhkiG9w0BAQEFAASCAQAOE0ULAOcos2StM9F2fRFcirAu
+# jewA35Aadkd/gh2mrujk7VGMCfN7hgD7XCdFVndTrIxondM1cTnhOIrHaU6LZAcC
+# cSPPjVwwl2geD677olKlE9Rudk5TfPQ4daAq1QvA6SnQHagt42Rm5YNiHEKo9Kew
+# ADi6VK9iQMD8u69+HGnBjr7ORr+VIdSFKR62PPqNV/fHxxFxBnSJNQoSj7SPSdN2
+# 11bbohzRlkvNWCsxKt9ESFNRNYdXDv8MVB3NqkP/zhvOpa0oXdZgoaEJW1blt/ey
+# RWvsgk8NuT8zPXpOBYx5wJxYqmIWMKFw1jcdT0g/QLSZ79db9SvvBGqJDbbQoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTEyNzE4Mjc1M1owIwYJKoZIhvcNAQkEMRYEFJ9vWB/aUDq/YA4pYjltzV65Rqbo
+# MTIwMjA0MzM0MVowIwYJKoZIhvcNAQkEMRYEFAfBeMxCs8IaMJvZJ0j705xV8hpR
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCWq2bpZ5P/4nLkYrUM
-# kbgyo51bnjLhpDhMOdgd1jO5fT0D4kLx/bPmHASQcUPwN0FGODrTSD8nuC2pifU+
-# i3RqhY/aiViibVk9VGNHxFVfdYroN6AOupeEXl5zlq6lFH+1LOuzjb1JBeH25XaW
-# FB/Vfr9JCWo+k4yyjsLQ7KpmXm49iK+oShQtWIqn8/Er+WBNBNkeT46D0sUHoQOM
-# koX/imXYuTA5OaNYFQQqsAW8op0NY+8FQWsd39gKm0Aps17XyEPyqYIObgCQ792I
-# cpEvifOO5x65UvhrulMqtAqQ6poO9MsA+tAoD9O/ZgyiPZWpk2y9D9akicrHDW1H
-# kMjv
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCXUg2aEuRZeF1ZczZn
+# GmcQD7678tweKQDghDd4R071tzzbWbe+Ax36US3KA6+eQVKqshgg4V9DSlNiGvAE
+# wPcODkmILs8cVVv5PI/J3wP8p1bpMu6hyprKQgdSb0ku6ok+JyS9Q/88PeKXa+Pg
+# YK6EF3im0ZPFV0GDD6a1jSgJoOqLvWiMezwjAOEIW2Q4yaj51DIG9rVGBpIYHW69
+# n+OL4kaQS96jRtb4wtrV3i/ARPSxXR/PKUstb3vmtZGZFeqAaEOyu2wSUwnp32qV
+# HVYE7rNVk3+hZn6TE0qI37tBOfQQfEaTGs5rmE/hKaAtgsnThmF6q1cAoNWkzOYA
+# MH5E
 # SIG # End signature block

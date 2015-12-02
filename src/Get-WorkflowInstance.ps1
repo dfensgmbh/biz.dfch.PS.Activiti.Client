@@ -17,7 +17,6 @@ See PARAMETER section for a description of input parameters.
 
 .EXAMPLE
 Get-WorkflowInstance -id "27741"
-
 id                   : 27741
 url                  : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/27741
 businessKey          : Worker#1
@@ -30,6 +29,52 @@ activityId           :
 tenantId             :
 variables            : {}
 
+.EXAMPLE
+
+Retrieves the first 2 running instances from Activiti. Not specifing id is the same as you would specify the 'ListAvailable' parameter.
+
+PS> Get-WorkflowInstance | Select -First 2
+id                     : 936
+url                    : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/936
+businessKey            :
+suspended              : False
+ended                  : False
+completed              : False
+processDefinitionId    : fixSystemFailure:1:37
+processDefinitionUrl   : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/fixSystemFailure:1:37
+activityId             : taskAfterTimer
+tenantId               :
+variables              : {}
+startUserId            :
+startActivityId        :
+endActivityId          :
+deleteReason           :
+startTime              :
+endTime                :
+superProcessInstanceId :
+durationInMillis       : 0
+
+id                     : 951
+url                    : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/951
+businessKey            :
+suspended              : False
+ended                  : False
+completed              : False
+processDefinitionId    : escalationExample:1:35
+processDefinitionUrl   : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/escalationExample:1:3
+activityId             : handleEscalation
+tenantId               :
+variables              : {}
+startUserId            :
+startActivityId        :
+endActivityId          :
+deleteReason           :
+startTime              :
+endTime                :
+superProcessInstanceId :
+durationInMillis       : 0
+
+
 #>
 [CmdletBinding(
 	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
@@ -37,17 +82,23 @@ variables            : {}
     SupportsShouldProcess = $true
 	,
     ConfirmImpact = 'Low'
+	,
+	DefaultParameterSetName = 'list'
 )]
 <#[OutputType([<Type>])]#>
 Param 
 (
 	# Specifies a reference to a existing workflow instance
-	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0)]
+	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0, ParameterSetName = 'name')]
 	[ValidateNotNullorEmpty()]
 	[Alias("WorkflowId")]
 	[Alias("workflow")]
 	[Alias("id")]
 	$InputObject
+	,
+	# Specifies to return all existing workflow instances
+	[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'list')]
+	[switch] $ListAvailable = $false
 	,
 	# Specifies a references to the Activiti client
 	[Parameter(Mandatory = $false, Position = 1)]
@@ -60,6 +111,13 @@ BEGIN
 	$datBegin = [datetime]::Now;
 	[string] $fn = $MyInvocation.MyCommand.Name;
 	Log-Debug $fn ("CALL.") -fac 1;
+	
+	# ProcessEngine validation
+	if($ProcessEngine -isnot [System.Object]) {
+		$msg = "Activiti: ProcessEngine validation FAILED. Connect to the server before using the Cmdlet.";
+		$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $ProcessEngine;
+		$PSCmdlet.ThrowTerminatingError($e);
+	} # if	
 }
 # BEGIN 
 
@@ -73,26 +131,37 @@ try
 	# Parameter validation
 	# N/A
 	
-	# Get ValueFromPipeline
-	$OutputObject = @();	
-	foreach($Object in $InputObject) {
-		if($PSCmdlet.ShouldProcess($Object)) {
-
-			# Call method
-			$OutputParameter = $ProcessEngine.GetWorkflowInstance($Object.ToString(), $true);
-			$OutputObject += $OutputParameter;
-
-		} # if
-	} # foreach
-	
-	# Set output depending is ValueFromPipeline
-	if ( $OutputObject.Count -gt 1 )
+	if($PSCmdlet.ParameterSetName -eq 'list') 
 	{
-		$OutputParameter = $OutputObject[0];
-	}
-	else
-	{
-		$OutputParameter = $OutputObject;
+		$OutputParameter = $ProcessEngine.GetWorkflowInstances();
+		if ( $OutputParameter -ne $null )
+		{
+			$OutputParameter = $OutputParameter | Select -ExpandProperty data;
+		}
+	} 
+	else 
+	{	
+		# Get ValueFromPipeline
+		$OutputObject = @();	
+		foreach($Object in $InputObject) {
+			if($PSCmdlet.ShouldProcess($Object)) {
+
+				# Call method
+				$OutputParameter = $ProcessEngine.GetWorkflowInstance($Object.ToString(), $true);
+				$OutputObject += $OutputParameter;
+
+			} # if
+		} # foreach
+		
+		# Set output depending is ValueFromPipeline
+		if ( $OutputObject.Count -gt 1 )
+		{
+			$OutputParameter = $OutputObject[0];
+		}
+		else
+		{
+			$OutputParameter = $OutputObject;
+		}
 	}
 	$fReturn = $true;
 
@@ -176,8 +245,8 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstanc
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUsyH9xzPgnDq7J8TkzjSsd92K
-# 9wOgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUml3lSKv/kZM0F9706bbQSO/m
+# Cn+gghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -276,26 +345,26 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstanc
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBSDvNXJLS2FMj9m
-# 7nSLSh6zbm2f5zANBgkqhkiG9w0BAQEFAASCAQDISkChIWFHVnhT7Tp44+VzRa25
-# L87XvvhH4zGkiAvRw2KvsoXswp2QaNnbhNuNAkY5zBKPIuevtr7rwehK6QlVMFis
-# iqb1HOKjGXwQE40bq8G/uBrnaEA3yMGhA4E8bBApoh931VPpDwMoZmhje5qIDBA8
-# unuTn6s9dggbKatq7XQabuRgTWWUA5+DldX3Bz/qI0zvThSBLRBR2nRS9r9bondC
-# hKm2IQj1tyFSG0U5vKkAYuUXJyk0f/s7/jQ2bNnHe2ofkveo8jiiL92qp5qYw6cG
-# Fdu5J50t0N+qRYdgIlYWZcpcKxved/TktQlD/FMvG8nGUHb26bIqHFbIuhGwoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRaj8PXO2xbWrl7
+# T4zud0b83q7MYTANBgkqhkiG9w0BAQEFAASCAQA4kQCX95g+UKxvy5N7T7YwMkFi
+# 4MvDoLEenuosZPJFN8TqBGjDHuomNFy4eFZVJWXI0PCXwG1/WmqJkGHR/ngdrs+S
+# rMUp4Khvs/NGfIKWKVPrrE2m+/Prlqgtw8yrF7zF7bTyz2xjMGqVt+qmwZO1eAW9
+# JjIZIoDO8NyF2TogYwDs+Mq3K1G5kqheVGkVJr9/NqNeQeTTSLNZeL3a1UvW/maA
+# 2z9KiEFE3O3eQAwOg6zW3+uSXDIxFkaMKtKemQisMyS6HAFw8JB6PkdXcWi1biPo
+# d5ogDZOI6sRon8IBg8THReovvX02i16MfepmI7kWD5yBfT6ZKhsAtEe2phwSoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTEyNzE4MTgwM1owIwYJKoZIhvcNAQkEMRYEFE+WyG8KXIlIUqt/kNkYINMBpsSh
+# MTIwMjA0MzM0MlowIwYJKoZIhvcNAQkEMRYEFCWr44Pg6JEj6R8v999bsb72dVrw
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQALCHMgvcY2MYVdJttA
-# 7wh9hyQUACf5jxbe0uDR/8aXIV7Zs9nCJuliFMV2NNn4sgikXWzGN0LKwlxcl7RP
-# 2OCv8CQ3NFplLfa4z8fqI++p3HxaPQjR/9ovkCiUvkw7O0LW6Dxab1L8Mda0DvAi
-# H7pVlO7VRdIrM6PzuIdEsqpg2dZ89f6kxiNWTAwqV5IveR1unJOh9DnmI5d6ikRa
-# P1szhqRt1SxJ4N/f21hyN/6VyRxzG+9rGQbsWQxKr9TR7xFa0fHfF+BRWdnZbmcG
-# XIWwRw3IHR5zaxVjml51Q1Ye3XkBHilwHZdQpvas5aONqcebAnOFMXaltZ7WAad4
-# myIj
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQBy2sWyx04XUB6ZsPan
+# rpIbc0a4SOuqevCwwqQta3h6QbBAHx0zEac9KcEmU15y1ZmdWa6TyNG+rTmMqYxd
+# Ht/a5H2AdKOXHQpSzlDQkxwb9eE3nI9uoTjOlRDptSgmLnwVOuzz+msm2ybyn44D
+# z1So9jXqQIUoA8NmIchKVSIyLXj6s6+A1pPT/lKvY1NAfmHotO3CtPOetVxPvakq
+# CNrsX+PbkJ3z03Arf6e5mxJA5q3bYzOe8vQsefe8m06F8ltSckRg8VhLc/Co+QbB
+# CI1R+GrHYYc3eJxHv+Hhk0UJOQ0Z1q/W2nzIsZTZnCH7O9qs7Kv8xDs+KtVvRvxJ
+# 9YR5
 # SIG # End signature block
