@@ -1,5 +1,7 @@
 # biz.dfch.PS.Activiti.Client
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/blob/master/LICENSE)
+![NuGet downloads](https://img.shields.io/nuget/dt/biz.dfch.PS.Activiti.Client.svg)
+![Version](https://img.shields.io/nuget/v/biz.dfch.PS.Activiti.Client.svg)
 
 PowerShell module for Activiti Workflow Engine
 
