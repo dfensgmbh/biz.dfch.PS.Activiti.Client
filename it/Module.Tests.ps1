@@ -14,6 +14,10 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 	
 	. "$here\$sut"
 	
+	$WaitTimeoutSeconds = 30;
+	
+	# either define $cred before running tests 
+	# or uncomment this line to ask for credentials at run time
 	# $cred = Get-Credential;
 	
 	Context "#CLOUDTCL-1895-ActivitiBaseTests" {
@@ -89,7 +93,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			{
 				# Act
 				$svc = Enter-Activiti;
-				"Test should have failed before." | Should Be "Test succeeded"
+				'Statement returned without exception' | Should Be 'An exception should have been thrown';
 			}
 			catch
 			{
@@ -115,7 +119,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			{
 				# Act
 				$svc = Enter-Activiti -cred $invalidCredential;
-				"Test should have failed before." | Should Be "Test succeeded"
+				'Statement returned without exception' | Should Be 'An exception should have been thrown';
 			}
 			catch
 			{
@@ -190,7 +194,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			{
 				# Act
 				$wfds = Get-ActivitiWorkflowDefinition -ProcessEngine $null;
-				"Test should have failed before." | Should Be "Test succeeded"
+				'Statement returned without exception' | Should Be 'An exception should have been thrown';
 			}
 			catch
 			{				
@@ -296,7 +300,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
 			
 			$result1 = Get-ActivitiWorkflowInstance -id $new.id -svc $svc
-			Start-Sleep 30
+			Start-Sleep $WaitTimeoutSeconds;
 			$result2 = Get-ActivitiWorkflowInstance -id $new.id -svc $svc
 			
 			# Assert result1
@@ -374,7 +378,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
-			Start-Sleep 30
+			Start-Sleep $WaitTimeoutSeconds;
 			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
 
@@ -396,9 +400,11 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 					
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
-			Start-Sleep 30 # workflow should end in an exception after 10 seconds.
+			# workflow should end with an exception after 10 seconds.
+			Start-Sleep $WaitTimeoutSeconds;
 			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
-			$ret | Should Be $true; #Failed workflow can be cancelled
+			# Failed workflow can be cancelled
+			$ret | Should Be $true;
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
 
 			# Assert
@@ -417,7 +423,8 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 					
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
-			Start-Sleep 30 # workflow should end in an exception after 10 seconds.
+			# workflow should end with an exception after 10 seconds.
+			Start-Sleep $WaitTimeoutSeconds;
 			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
 			$ret | Should Be $false;
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
