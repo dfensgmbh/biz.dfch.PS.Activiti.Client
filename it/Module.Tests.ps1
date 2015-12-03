@@ -164,7 +164,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		}
 	}
 
-	Context "CLOUDTCL-1897-ActivitiWorkflowDefinition" {
+	Context "#CLOUDTCL-1897-ActivitiWorkflowDefinition" {
 	
 		BeforeEach {
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
@@ -252,7 +252,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 	}
 	
 	
-	Context "CLOUDTCL-1898-ActivitiWorkflowstatus"{
+	Context "#CLOUDTCL-1898-ActivitiWorkflowstatus"{
 	
 		BeforeEach {
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
@@ -322,7 +322,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		}		
 	}
 	
-	Context "CLOUDTCL-1899-ActivitiCancelWorkflow"{
+	Context "#CLOUDTCL-1899-ActivitiCancelWorkflow"{
 	
 		BeforeEach {
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
@@ -358,6 +358,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
+			
+			# TODO: Suspend workflow here
+			
 			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
 
@@ -366,7 +369,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$ret | Should Be $true;
 			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
 			$result.id | Should Be $new.id;
-			$result.suspended | Should Be 'False';
+			$result.suspended | Should Be 'True';
 			$result.ended | Should Be 'True';
 			$result.completed | Should Be 'True';
 		}
