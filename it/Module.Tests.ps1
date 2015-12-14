@@ -16,10 +16,13 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 	
 	$WaitTimeoutSeconds = 30;
 	
-	# either define $cred before running tests 
-	# or uncomment this line to ask for credentials at run time
+	# uncomment this line to ask for credentials at run time
 	# $cred = Get-Credential;
-	
+	$settings =Get-ApcManagementCredential -Name biz.dfch.PS.Activiti.Client.Setting;
+	$secpasswd = ConvertTo-SecureString $settings.Password -AsPlainText -Force
+
+	$cred = New-Object System.Management.Automation.PSCredential ($set.Username, $secpasswd);
+		
 	Context "#CLOUDTCL-1895-ActivitiBaseTests" {
 
 		It "Activiti-ModuleListSucceeds" -Test {
