@@ -21,7 +21,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 	$settings =Get-ApcManagementCredential -Name biz.dfch.PS.Activiti.Client.Setting;
 	$secpasswd = ConvertTo-SecureString $settings.Password -AsPlainText -Force
 
-	$cred = New-Object System.Management.Automation.PSCredential ($set.Username, $secpasswd);
+	$cred = New-Object System.Management.Automation.PSCredential ($settings.Username, $secpasswd);
 		
 	Context "#CLOUDTCL-1895-ActivitiBaseTests" {
 
