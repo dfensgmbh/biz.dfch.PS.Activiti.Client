@@ -136,7 +136,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		It "Activiti-LoginWithApplicationNameSucceeds" -Test {
 		
 			# Arrange
-			$applicationName = 'PesterTest-{0}' -f [guid]::NewGuid().Guid;
+			$applicationName = 'PesterTest-{0}' -f [guid]::NewGuid().ToString();
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
 			Remove-Module $moduleName -ErrorAction:SilentlyContinue;
 			Import-Module $moduleName;
@@ -152,7 +152,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		It "Activiti-LoginWithApplicationNamePropertySucceeds" -Test {
 		
 			# Arrange
-			$applicationName = 'PesterTest-{0}' -f [guid]::NewGuid().Guid;
+			$applicationName = 'PesterTest-{0}' -f [guid]::NewGuid().ToString();
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
 			Remove-Module $moduleName -ErrorAction:SilentlyContinue;
 			Import-Module $moduleName;
