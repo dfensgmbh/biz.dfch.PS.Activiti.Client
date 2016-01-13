@@ -152,15 +152,27 @@ try
 
 			} # if
 		} # foreach
-		
+
 		# Set output depending is ValueFromPipeline
-		if ( $OutputObject.Count -gt 1 )
+		if(0 -eq $OutputObject.Count)
+		{
+			$OutputParameter = $null;
+		}
+		elseif(1 -eq $OutputObject.Count)
 		{
 			$OutputParameter = $OutputObject[0];
 		}
 		else
 		{
-			$OutputParameter = $OutputObject;
+			# DFTODO - Wrapper workaround
+			if(2 -eq $OutputObject.Count -and !($OutputObject[0].id))
+			{
+				$OutputParameter = $null;
+			} 
+			else
+			{
+				$OutputParameter = $OutputObject;
+			}			
 		}
 	}
 	$fReturn = $true;
