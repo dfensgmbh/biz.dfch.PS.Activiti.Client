@@ -8,7 +8,7 @@
 RootModule = 'biz.dfch.PS.Activiti.Client.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1.20160126'
+ModuleVersion = '1.1.0.20160126'
 
 # ID used to uniquely identify this module
 GUID = '337f3ad4-6485-4572-8546-1f3adf8dcf50'
