@@ -144,7 +144,7 @@ END
 
 } # function
 
-if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowDeployment; } 
+if($MyInvocation.ScriptName) { Export-ModuleMember -Function Create-WorkflowDeployment; } 
 
 # 
 # Copyright 2015 d-fens GmbH
