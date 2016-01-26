@@ -1,11 +1,11 @@
 function Get-WorkflowDeployment {
 <#
 .SYNOPSIS
-Get a list of configured Workflow Deployments from Activiti.
+Get one or more configured Workflow Deployments from Activiti.
 
 
 .DESCRIPTION
-Get a list of configured Workflow Deployments from Activiti.
+Get one or more configured Workflow Deployments from Activiti.
 
 
 .OUTPUTS
@@ -46,7 +46,10 @@ Param
 	[Parameter(Mandatory = $false, Position = 1)]
 	[Alias("svc")]
 	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
-	
+	,
+	# Indicates to return all informations
+	[Parameter(Mandatory = $false, ParameterSetName = 'list')]
+	[switch] $ListAvailable = $false
 )
 
 BEGIN 
@@ -79,6 +82,10 @@ try
 	if($PSCmdlet.ParameterSetName -eq 'id') 
 	{
 		$OutputParameter = $ProcessEngine.GetDeployment($Id);
+	}
+	else
+	{
+		$OutputParameter =  $ProcessEngine.GetDeployments();
 	}
 	$fReturn = $true;
 
@@ -142,7 +149,8 @@ END
 
 } # function
 
-if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowDeployment; } 
+Set-Alias -Name Get-WorkflowDeployments -Value 'Get-WorkflowDeployment';
+if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowDeployment -Alias Get-WorkflowDeployments; } 
 
 # 
 # Copyright 2015 d-fens GmbH
