@@ -32,6 +32,25 @@ Describe -Tags "Get-WorkflowDeployment" "Get-WorkflowDeployment" {
 		}
 
 	}
+	
+	Context "Get-WorkflowDeployments" {
+	
+		# Context wide constants
+		# N/A
+
+		It "Get-WorkflowDeployments-ShouldReturnList" -Test {
+			# Arrange
+			# N/A
+			
+			# Act
+			$result = Get-WorkflowDeployments -svc $svc;
+
+			# Assert
+			$result | Should Not Be $null;
+			0 -lt $result.Count | Should Be $true;
+		}
+
+	}
 }
 
 #

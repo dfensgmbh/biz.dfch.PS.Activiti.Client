@@ -74,8 +74,6 @@ NestedModules = @(
 	,
 	'Get-WorkflowDeployment.ps1'
 	,
-	'Get-WorkflowDeployments.ps1'
-	,
 	'Remove-WorkflowDeployment.ps1'
 	,
 	'Create-WorkflowDeployment.ps1'
