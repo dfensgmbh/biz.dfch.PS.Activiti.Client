@@ -1,264 +1,67 @@
-function Get-WorkflowInstance {
-<#
-.SYNOPSIS
-Get Workflow Instances based on a Workflow Definitions from Activiti.
 
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-.DESCRIPTION
-Get Workflow Instances based on a Workflow Definitions from Activiti.
+Describe -Tags "Suspend-WorkflowInstance" "Suspend-WorkflowInstance" {
 
-
-.OUTPUTS
-
-
-.INPUTS
-See PARAMETER section for a description of input parameters.
-
-
-.EXAMPLE
-Get-WorkflowInstance -id "27741"
-id                   : 27741
-url                  : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/27741
-businessKey          : Worker#1
-suspended            : False
-ended                : False
-completed            : False
-processDefinitionId  : createTimersProcess:1:31
-processDefinitionUrl : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/createTimersProcess:1:31
-activityId           :
-tenantId             :
-variables            : {}
-
-.EXAMPLE
-
-Retrieves the first 2 running instances from Activiti. Not specifing id is the same as you would specify the 'ListAvailable' parameter.
-
-PS> Get-WorkflowInstance | Select -First 2
-id                     : 936
-url                    : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/936
-businessKey            :
-suspended              : False
-ended                  : False
-completed              : False
-processDefinitionId    : fixSystemFailure:1:37
-processDefinitionUrl   : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/fixSystemFailure:1:37
-activityId             : taskAfterTimer
-tenantId               :
-variables              : {}
-startUserId            :
-startActivityId        :
-endActivityId          :
-deleteReason           :
-startTime              :
-endTime                :
-superProcessInstanceId :
-durationInMillis       : 0
-
-id                     : 951
-url                    : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/951
-businessKey            :
-suspended              : False
-ended                  : False
-completed              : False
-processDefinitionId    : escalationExample:1:35
-processDefinitionUrl   : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/escalationExample:1:3
-activityId             : handleEscalation
-tenantId               :
-variables              : {}
-startUserId            :
-startActivityId        :
-endActivityId          :
-deleteReason           :
-startTime              :
-endTime                :
-superProcessInstanceId :
-durationInMillis       : 0
-
-
-#>
-[CmdletBinding(
-	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
-	,
-    SupportsShouldProcess = $true
-	,
-    ConfirmImpact = 'Low'
-	,
-	DefaultParameterSetName = 'list'
-)]
-<#[OutputType([<Type>])]#>
-Param 
-(
-	# Specifies a reference to a existing workflow instance
-	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0, ParameterSetName = 'name')]
-	[ValidateNotNullorEmpty()]
-	[Alias("WorkflowId")]
-	[Alias("workflow")]
-	[Alias("id")]
-	$InputObject
-	,
-	# Specifies to return all existing workflow instances
-	[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'list')]
-	[switch] $ListAvailable = $false
-	,
-	# Specifies a references to the Activiti client
-	[Parameter(Mandatory = $false, Position = 1)]
-	[Alias("svc")]
-	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
-)
-
-BEGIN 
-{
-	$datBegin = [datetime]::Now;
-	[string] $fn = $MyInvocation.MyCommand.Name;
-	Log-Debug $fn ("CALL.") -fac 1;
+	Mock Export-ModuleMember { return $null; }
 	
-	# ProcessEngine validation
-	if($ProcessEngine -isnot [System.Object]) {
-		$msg = "Activiti: ProcessEngine validation FAILED. Connect to the server before using the Cmdlet.";
-		$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $ProcessEngine;
-		$PSCmdlet.ThrowTerminatingError($e);
-	} # if	
-}
-# BEGIN 
-
-PROCESS 
-{
-
-[boolean] $fReturn = $false;
-
-try 
-{
-	# Parameter validation
-	# N/A
+	. "$here\$sut"
 	
-	if($PSCmdlet.ParameterSetName -eq 'list') 
-	{
-		$OutputParameter = $ProcessEngine.GetWorkflowInstances();
-		if ( $OutputParameter -ne $null )
-		{
-			$OutputParameter = $OutputParameter | Select -ExpandProperty data;
-		}
-	} 
-	else 
-	{	
-		# Get ValueFromPipeline
-		$OutputObject = @();	
-		foreach($Object in $InputObject) {
-			if($PSCmdlet.ShouldProcess($Object)) {
+	$svc = Enter-ActivitiServer;
 
-				# Call method
-				$OutputParameter = $ProcessEngine.GetWorkflowInstance($Object.ToString(), $true);
-				$OutputObject += $OutputParameter;
+	Context "Suspend-WorkflowInstance" {
+	
+		# Context wide constants
+		# N/A
 
-			} # if
-		} # foreach
-
-		# Set output depending is ValueFromPipeline
-		if(0 -eq $OutputObject.Count)
-		{
-			$OutputParameter = $null;
-		}
-		elseif(1 -eq $OutputObject.Count)
-		{
-			$OutputParameter = $OutputObject[0];
-		}
-		else
-		{
-			# DFTODO - Wrapper workaround
-			if(2 -eq $OutputObject.Count -and !($OutputObject[0].id))
-			{
-				$OutputParameter = $null;
-			} 
-			else
-			{
-				$OutputParameter = $OutputObject;
-			}			
-		}
-	}
-	$fReturn = $true;
-
-}
-catch 
-{
-	if($gotoSuccess -eq $_.Exception.Message) 
-	{
-			$fReturn = $true;
-	} 
-	else 
-	{
-		[string] $ErrorText = "catch [$($_.FullyQualifiedErrorId)]";
-		$ErrorText += (($_ | fl * -Force) | Out-String);
-		$ErrorText += (($_.Exception | fl * -Force) | Out-String);
-		$ErrorText += (Get-PSCallStack | Out-String);
+		It "Suspend-WorkflowInstance" -Test {
+			# Arrange
+			$definitionKey='createTimersProcessPesterTests';		
+			$vars = @{"duration"="60000"};
+			
+			# Act
+			$definition = Get-ActivitiWorkflowDefinition -key $definitionKey;
+			$new = Start-ActivitiWorkflowInstance -id $definition.id -params $vars -svc $svc;
 		
-		if($_.Exception -is [System.Net.WebException]) 
-		{
-			Log-Critical $fn "Login to Uri '$Uri' with Username '$Username' FAILED [$_].";
-			Log-Debug $fn $ErrorText -fac 3;
+			# Act
+			$resultPause = Suspend-WorkflowInstance -id $new.id  -svc $svc;
+			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+					
+			# Assert
+			$new | Should Not Be $null;
+			$definition.id -eq $new.processDefinitionId | Should Be $true;
+			$result | Should Not Be $null;
+			$result.suspended | Should Be $true;
+			$result.ended | Should Be $false;
+			$result.completed | Should Be $false;
+		
 		}
-		else 
-		{
-			Log-Error $fn $ErrorText -fac 3;
-			if($gotoError -eq $_.Exception.Message) 
-			{
-				Log-Error $fn $e.Exception.Message;
-				$PSCmdlet.ThrowTerminatingError($e);
-			} 
-			elseif($gotoFailure -ne $_.Exception.Message) 
-			{ 
-				Write-Verbose ("$fn`n$ErrorText"); 
-			} 
-			else 
-			{
-				# N/A
-			}
-		}
-		$fReturn = $false;
-		$OutputParameter = $null;
+
 	}
 }
-finally 
-{
-	# Clean up
-	# N/A
-}
-return $OutputParameter;
 
-}
-# PROCESS
-
-END 
-{
-	$datEnd = [datetime]::Now;
-	Log-Debug -fn $fn -msg ("RET. fReturn: [{0}]. Execution time: [{1}]ms. Started: [{2}]." -f $fReturn, ($datEnd - $datBegin).TotalMilliseconds, $datBegin.ToString('yyyy-MM-dd HH:mm:ss.fffzzz')) -fac 2;
-}
-# END
-
-} # function
-
-if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstance; } 
-
-# 
+#
 # Copyright 2015 d-fens GmbH
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# 
+#
 
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUml3lSKv/kZM0F9706bbQSO/m
-# Cn+gghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUxxskGX4k5sl1VbhJSSF99zys
+# PkegghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -357,26 +160,26 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstanc
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRaj8PXO2xbWrl7
-# T4zud0b83q7MYTANBgkqhkiG9w0BAQEFAASCAQA4kQCX95g+UKxvy5N7T7YwMkFi
-# 4MvDoLEenuosZPJFN8TqBGjDHuomNFy4eFZVJWXI0PCXwG1/WmqJkGHR/ngdrs+S
-# rMUp4Khvs/NGfIKWKVPrrE2m+/Prlqgtw8yrF7zF7bTyz2xjMGqVt+qmwZO1eAW9
-# JjIZIoDO8NyF2TogYwDs+Mq3K1G5kqheVGkVJr9/NqNeQeTTSLNZeL3a1UvW/maA
-# 2z9KiEFE3O3eQAwOg6zW3+uSXDIxFkaMKtKemQisMyS6HAFw8JB6PkdXcWi1biPo
-# d5ogDZOI6sRon8IBg8THReovvX02i16MfepmI7kWD5yBfT6ZKhsAtEe2phwSoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTGKJo4sn9alO2y
+# G/U7ywmjk9W9LTANBgkqhkiG9w0BAQEFAASCAQCMCUy3jIgGfJcKp55ip7VUqiFV
+# YeiKYM099ZGo1ZbAGpMgpiuFJiQNTBIMWzxHkrF8XvVDxTz3ffAmIzhsrvofyqjE
+# eYAsG2Zvs9wUZneh16QFWfy+D2+KLEGb9LVdXFAyDDWmq1MOWui4JLb009yWLPJQ
+# v5bvMO7NW7bdxfIkzc1pA77jYTQ0tUl/YD1M2SN+pMUsMurr9iRawTK/cESkGADi
+# q826zwgy73APYl6hklAEd6AGuvTjdAbG7HOe5DGHaF2p7hgAM71RT5JOPIiup+XX
+# s/oNZL4DsaDy2W2ihkth8DY1/vBFFbLsJJ0P0Cp2t3aV4jvP3qiCVfMpVzCkoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTIwMjA0MzM0MlowIwYJKoZIhvcNAQkEMRYEFCWr44Pg6JEj6R8v999bsb72dVrw
+# MTIwMjA0MzM0M1owIwYJKoZIhvcNAQkEMRYEFLOn6fbogL+m5rSPAcw6NYhZgl4k
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQBy2sWyx04XUB6ZsPan
-# rpIbc0a4SOuqevCwwqQta3h6QbBAHx0zEac9KcEmU15y1ZmdWa6TyNG+rTmMqYxd
-# Ht/a5H2AdKOXHQpSzlDQkxwb9eE3nI9uoTjOlRDptSgmLnwVOuzz+msm2ybyn44D
-# z1So9jXqQIUoA8NmIchKVSIyLXj6s6+A1pPT/lKvY1NAfmHotO3CtPOetVxPvakq
-# CNrsX+PbkJ3z03Arf6e5mxJA5q3bYzOe8vQsefe8m06F8ltSckRg8VhLc/Co+QbB
-# CI1R+GrHYYc3eJxHv+Hhk0UJOQ0Z1q/W2nzIsZTZnCH7O9qs7Kv8xDs+KtVvRvxJ
-# 9YR5
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQB6/m+eIoKIu9lcxi9Q
+# 3I8u6SnachFNKMSTQvSibzNXid4t/1Lnx2V7CwHR4zbwO5ZMLwen7U96bHu5osuj
+# APZ/bWOnH2iBFbVSvTWTCRQkdN9+Mj7o/YES62xZ3q8hyHhOZNzX8PoW6phisv0D
+# ICVH5uZmy8GCQg7e0ZHqjcdTsIMZXhbAezytMkCHkmoG+rVYek0xntNcAbdSTh1f
+# Bq68FipjdrsvPIE1F4H3AsarqlaeC4oyDIl2BOYM8YEpGZxZzV+qZrpmzHHRkUR9
+# ns62NhuO1Ym1+NOaNb6yLZv2C1CV2M1OjEsxljFYypnPIkxetZdhbp7d34LlaMuQ
+# fipf
 # SIG # End signature block

@@ -1,11 +1,11 @@
-function Get-WorkflowInstance {
+function Get-WorkflowDeployment {
 <#
 .SYNOPSIS
-Get Workflow Instances based on a Workflow Definitions from Activiti.
+Get one or more configured Workflow Deployments from Activiti.
 
 
 .DESCRIPTION
-Get Workflow Instances based on a Workflow Definitions from Activiti.
+Get one or more configured Workflow Deployments from Activiti.
 
 
 .OUTPUTS
@@ -16,64 +16,14 @@ See PARAMETER section for a description of input parameters.
 
 
 .EXAMPLE
-Get-WorkflowInstance -id "27741"
-id                   : 27741
-url                  : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/27741
-businessKey          : Worker#1
-suspended            : False
-ended                : False
-completed            : False
-processDefinitionId  : createTimersProcess:1:31
-processDefinitionUrl : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/createTimersProcess:1:31
-activityId           :
-tenantId             :
-variables            : {}
+Get-WorkflowDeployment;
 
-.EXAMPLE
-
-Retrieves the first 2 running instances from Activiti. Not specifing id is the same as you would specify the 'ListAvailable' parameter.
-
-PS> Get-WorkflowInstance | Select -First 2
-id                     : 936
-url                    : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/936
-businessKey            :
-suspended              : False
-ended                  : False
-completed              : False
-processDefinitionId    : fixSystemFailure:1:37
-processDefinitionUrl   : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/fixSystemFailure:1:37
-activityId             : taskAfterTimer
-tenantId               :
-variables              : {}
-startUserId            :
-startActivityId        :
-endActivityId          :
-deleteReason           :
-startTime              :
-endTime                :
-superProcessInstanceId :
-durationInMillis       : 0
-
-id                     : 951
-url                    : http://activiti.example.com:9000/activiti-rest/service/runtime/process-instances/951
-businessKey            :
-suspended              : False
-ended                  : False
-completed              : False
-processDefinitionId    : escalationExample:1:35
-processDefinitionUrl   : http://activiti.example.com:9000/activiti-rest/service/repository/process-definitions/escalationExample:1:3
-activityId             : handleEscalation
-tenantId               :
-variables              : {}
-startUserId            :
-startActivityId        :
-endActivityId          :
-deleteReason           :
-startTime              :
-endTime                :
-superProcessInstanceId :
-durationInMillis       : 0
-
+id: 				216602
+name: 				createTimersProcessUnitTests2.bpmn20.xml
+deploymentTime: 	2016-01-21T16:42:56.514+01:00
+category: 			null
+url: 				http://172.19.115.38:9080/activiti-rest/service/repository/deployments/216602
+tenantId: 
 
 #>
 [CmdletBinding(
@@ -88,22 +38,18 @@ durationInMillis       : 0
 <#[OutputType([<Type>])]#>
 Param 
 (
-	# Specifies a reference to a existing workflow instance
-	[Parameter(Mandatory = $true, ValueFromPipeline = $true, Position = 0, ParameterSetName = 'name')]
-	[ValidateNotNullorEmpty()]
-	[Alias("WorkflowId")]
-	[Alias("workflow")]
-	[Alias("id")]
-	$InputObject
-	,
-	# Specifies to return all existing workflow instances
-	[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'list')]
-	[switch] $ListAvailable = $false
+	# Specifies a workflow definition id
+	[Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'id')]
+	$Id
 	,
 	# Specifies a references to the Activiti client
 	[Parameter(Mandatory = $false, Position = 1)]
 	[Alias("svc")]
 	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
+	,
+	# Indicates to return all informations
+	[Parameter(Mandatory = $false, ParameterSetName = 'list')]
+	[switch] $ListAvailable = $false
 )
 
 BEGIN 
@@ -111,7 +57,7 @@ BEGIN
 	$datBegin = [datetime]::Now;
 	[string] $fn = $MyInvocation.MyCommand.Name;
 	Log-Debug $fn ("CALL.") -fac 1;
-	
+		
 	# ProcessEngine validation
 	if($ProcessEngine -isnot [System.Object]) {
 		$msg = "Activiti: ProcessEngine validation FAILED. Connect to the server before using the Cmdlet.";
@@ -125,55 +71,21 @@ PROCESS
 {
 
 [boolean] $fReturn = $false;
+$OutputParameter = $null;
 
 try 
 {
 	# Parameter validation
 	# N/A
 	
-	if($PSCmdlet.ParameterSetName -eq 'list') 
+	# Call method
+	if($PSCmdlet.ParameterSetName -eq 'id') 
 	{
-		$OutputParameter = $ProcessEngine.GetWorkflowInstances();
-		if ( $OutputParameter -ne $null )
-		{
-			$OutputParameter = $OutputParameter | Select -ExpandProperty data;
-		}
-	} 
-	else 
-	{	
-		# Get ValueFromPipeline
-		$OutputObject = @();	
-		foreach($Object in $InputObject) {
-			if($PSCmdlet.ShouldProcess($Object)) {
-
-				# Call method
-				$OutputParameter = $ProcessEngine.GetWorkflowInstance($Object.ToString(), $true);
-				$OutputObject += $OutputParameter;
-
-			} # if
-		} # foreach
-
-		# Set output depending is ValueFromPipeline
-		if(0 -eq $OutputObject.Count)
-		{
-			$OutputParameter = $null;
-		}
-		elseif(1 -eq $OutputObject.Count)
-		{
-			$OutputParameter = $OutputObject[0];
-		}
-		else
-		{
-			# DFTODO - Wrapper workaround
-			if(2 -eq $OutputObject.Count -and !($OutputObject[0].id))
-			{
-				$OutputParameter = $null;
-			} 
-			else
-			{
-				$OutputParameter = $OutputObject;
-			}			
-		}
+		$OutputParameter = $ProcessEngine.GetDeployment($Id);
+	}
+	else
+	{
+		$OutputParameter =  $ProcessEngine.GetDeployments();
 	}
 	$fReturn = $true;
 
@@ -201,6 +113,7 @@ catch
 			Log-Error $fn $ErrorText -fac 3;
 			if($gotoError -eq $_.Exception.Message) 
 			{
+			
 				Log-Error $fn $e.Exception.Message;
 				$PSCmdlet.ThrowTerminatingError($e);
 			} 
@@ -236,7 +149,8 @@ END
 
 } # function
 
-if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstance; } 
+Set-Alias -Name Get-WorkflowDeployments -Value 'Get-WorkflowDeployment';
+if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowDeployment -Alias Get-WorkflowDeployments; } 
 
 # 
 # Copyright 2015 d-fens GmbH
@@ -257,8 +171,8 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstanc
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUml3lSKv/kZM0F9706bbQSO/m
-# Cn+gghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUX7SN3MMgXsNAJ264z/KuXMxD
+# zNagghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -357,26 +271,26 @@ if($MyInvocation.ScriptName) { Export-ModuleMember -Function Get-WorkflowInstanc
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRaj8PXO2xbWrl7
-# T4zud0b83q7MYTANBgkqhkiG9w0BAQEFAASCAQA4kQCX95g+UKxvy5N7T7YwMkFi
-# 4MvDoLEenuosZPJFN8TqBGjDHuomNFy4eFZVJWXI0PCXwG1/WmqJkGHR/ngdrs+S
-# rMUp4Khvs/NGfIKWKVPrrE2m+/Prlqgtw8yrF7zF7bTyz2xjMGqVt+qmwZO1eAW9
-# JjIZIoDO8NyF2TogYwDs+Mq3K1G5kqheVGkVJr9/NqNeQeTTSLNZeL3a1UvW/maA
-# 2z9KiEFE3O3eQAwOg6zW3+uSXDIxFkaMKtKemQisMyS6HAFw8JB6PkdXcWi1biPo
-# d5ogDZOI6sRon8IBg8THReovvX02i16MfepmI7kWD5yBfT6ZKhsAtEe2phwSoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTv0h1lseuwpYpe
+# kU91b6kFQQhOrDANBgkqhkiG9w0BAQEFAASCAQAOE0ULAOcos2StM9F2fRFcirAu
+# jewA35Aadkd/gh2mrujk7VGMCfN7hgD7XCdFVndTrIxondM1cTnhOIrHaU6LZAcC
+# cSPPjVwwl2geD677olKlE9Rudk5TfPQ4daAq1QvA6SnQHagt42Rm5YNiHEKo9Kew
+# ADi6VK9iQMD8u69+HGnBjr7ORr+VIdSFKR62PPqNV/fHxxFxBnSJNQoSj7SPSdN2
+# 11bbohzRlkvNWCsxKt9ESFNRNYdXDv8MVB3NqkP/zhvOpa0oXdZgoaEJW1blt/ey
+# RWvsgk8NuT8zPXpOBYx5wJxYqmIWMKFw1jcdT0g/QLSZ79db9SvvBGqJDbbQoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTIwMjA0MzM0MlowIwYJKoZIhvcNAQkEMRYEFCWr44Pg6JEj6R8v999bsb72dVrw
+# MTIwMjA0MzM0MVowIwYJKoZIhvcNAQkEMRYEFAfBeMxCs8IaMJvZJ0j705xV8hpR
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQBy2sWyx04XUB6ZsPan
-# rpIbc0a4SOuqevCwwqQta3h6QbBAHx0zEac9KcEmU15y1ZmdWa6TyNG+rTmMqYxd
-# Ht/a5H2AdKOXHQpSzlDQkxwb9eE3nI9uoTjOlRDptSgmLnwVOuzz+msm2ybyn44D
-# z1So9jXqQIUoA8NmIchKVSIyLXj6s6+A1pPT/lKvY1NAfmHotO3CtPOetVxPvakq
-# CNrsX+PbkJ3z03Arf6e5mxJA5q3bYzOe8vQsefe8m06F8ltSckRg8VhLc/Co+QbB
-# CI1R+GrHYYc3eJxHv+Hhk0UJOQ0Z1q/W2nzIsZTZnCH7O9qs7Kv8xDs+KtVvRvxJ
-# 9YR5
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCXUg2aEuRZeF1ZczZn
+# GmcQD7678tweKQDghDd4R071tzzbWbe+Ax36US3KA6+eQVKqshgg4V9DSlNiGvAE
+# wPcODkmILs8cVVv5PI/J3wP8p1bpMu6hyprKQgdSb0ku6ok+JyS9Q/88PeKXa+Pg
+# YK6EF3im0ZPFV0GDD6a1jSgJoOqLvWiMezwjAOEIW2Q4yaj51DIG9rVGBpIYHW69
+# n+OL4kaQS96jRtb4wtrV3i/ARPSxXR/PKUstb3vmtZGZFeqAaEOyu2wSUwnp32qV
+# HVYE7rNVk3+hZn6TE0qI37tBOfQQfEaTGs5rmE/hKaAtgsnThmF6q1cAoNWkzOYA
+# MH5E
 # SIG # End signature block
