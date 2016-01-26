@@ -430,9 +430,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
-			
-			# TODO: Suspend workflow here
-			
+			#Suspend workflow
+			$resultSuspend = Suspend-ActivitiWorkflowInstance -id $new.id;
+						
 			$ret = Stop-ActivitiWorkflowInstance -id $new.id -svc $svc;
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
 
@@ -441,7 +441,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$ret | Should Be $true;
 			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
 			$result.id | Should Be $new.id;
-			#$result.suspended | Should Be 'True';
+			$result.suspended | Should Be 'False';
 			$result.ended | Should Be 'True';
 			$result.completed | Should Be 'True';
 		}
@@ -525,6 +525,161 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			# Assert
 			$result | Should Be $false;
 		}
+		
+	}
+	
+	Context "#CLOUDTCL-2015-ActivitiSuspendAndResumeWorkflow"{
+	
+		BeforeEach {
+			$moduleName = 'biz.dfch.PS.Activiti.Client';
+			Remove-Module $moduleName -ErrorAction:SilentlyContinue;
+			Import-Module $moduleName;
+			$svc = Enter-Activiti -Credential $cred;
+		}
+		
+		It "SuspendInvokedWorkflowInstance-Succeeds" -Test {
+			# Arrange
+			$definitionKey='createTimersProcessPesterTests';		
+			$vars = @{"duration"="60000"};
+			
+			# Act
+			$definition = Get-ActivitiWorkflowDefinition -key $definitionKey;
+			$new = Start-ActivitiWorkflowInstance -id $definition.id -params $vars -svc $svc;
+		
+			# Act
+			$resultSuspend = Suspend-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+					
+			# Assert
+			$new | Should Not Be $null;
+			$definition.id -eq $new.processDefinitionId | Should Be $true;
+			$result | Should Not Be $null;
+			$result.suspended | Should Be $true;
+			$result.ended | Should Be $false;
+			$result.completed | Should Be $false;
+			
+		}
+		
+		It "ResumeInvokedWorkflowInstance-Succeeds" -Test {
+			# Arrange
+			$definitionKey='createTimersProcessPesterTests';		
+			$vars = @{"duration"="60000"};
+			
+			# Act
+			$definition = Get-ActivitiWorkflowDefinition -key $definitionKey;
+			$new = Start-ActivitiWorkflowInstance -id $definition.id -params $vars -svc $svc;
+		
+			# Act
+			$resultSuspend = Suspend-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+			$resultSuspended = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+					
+			$resultResumed = Resume-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+			$resultResumedReloaded = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			
+			# Assert
+			$new | Should Not Be $null;
+			$definition.id -eq $new.processDefinitionId | Should Be $true;
+			$resultSuspended | Should Not Be $null;
+			$resultSuspended.suspended | Should Be $true;
+			$resultSuspended.ended | Should Be $false;
+			$resultSuspended.completed | Should Be $false;
+		
+			$resultResumed | Should Not Be $null;
+			$resultResumed.suspended | Should Be $false;
+			$resultResumed.ended | Should Be $false;
+			$resultResumed.completed | Should Be $false;
+			
+			$resultResumedReloaded | Should Not Be $null;
+			$resultResumedReloaded.suspended | Should Be $false;
+			$resultResumedReloaded.ended | Should Be $false;
+			$resultResumedReloaded.completed | Should Be $false;
+		}
+		
+		It "ResumeResumedWorkflowInstance-Succeeds" -Test {
+			# Arrange
+			$definitionKey='createTimersProcessPesterTests';		
+			$vars = @{"duration"="60000"};
+			
+			# Act
+			$definition = Get-ActivitiWorkflowDefinition -key $definitionKey;
+			$new = Start-ActivitiWorkflowInstance -id $definition.id -params $vars -svc $svc;
+		
+			# Act
+			$resultSuspend = Suspend-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+			$resultSuspended = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+					
+			$resultResumed = Resume-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+			$resultResumedReloaded = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			
+			try
+			{
+				$resultResumedAgain = Resume-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+				'Statement returned without exception' | Should Be 'An exception should have been thrown';
+			}
+			catch
+			{
+				# Assert
+				# Result in Fiddler: {"message":"Conflict","exception":"Process instance with id '295424' is already active."}
+				$result = $error[0].Exception.Message -like '*Response status code does not indicate success: 409 (Conflict).*';
+				$result | Should Be $true
+			}
+			
+			
+			# Assert
+			$new | Should Not Be $null;
+			$definition.id -eq $new.processDefinitionId | Should Be $true;
+			$resultSuspended | Should Not Be $null;
+			$resultSuspended.suspended | Should Be $true;
+			$resultSuspended.ended | Should Be $false;
+			$resultSuspended.completed | Should Be $false;
+		
+			$resultResumed | Should Not Be $null;
+			$resultResumed.suspended | Should Be $false;
+			$resultResumed.ended | Should Be $false;
+			$resultResumed.completed | Should Be $false;
+			
+			$resultResumedReloaded | Should Not Be $null;
+			$resultResumedReloaded.suspended | Should Be $false;
+			$resultResumedReloaded.ended | Should Be $false;
+			$resultResumedReloaded.completed | Should Be $false;
+		}
+		
+		It "SuspendSuspendedWorkflowInstance-Succeeds" -Test {
+			# Arrange
+			$definitionKey='createTimersProcessPesterTests';		
+			$vars = @{"duration"="60000"};
+			
+			# Act
+			$definition = Get-ActivitiWorkflowDefinition -key $definitionKey;
+			$new = Start-ActivitiWorkflowInstance -id $definition.id -params $vars -svc $svc;
+		
+			# Act
+			$resultSuspend = Suspend-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+			$resultSuspended = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			
+			try
+			{
+				$resultSuspendedAgain = Suspend-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+				'Statement returned without exception' | Should Be 'An exception should have been thrown';
+			}
+			catch
+			{
+				# Assert
+				# Result in Fiddler: {"message":"Conflict","exception":"Process instance with id '295424' is already suspended."}
+				$result = $error[0].Exception.Message -like '*Response status code does not indicate success: 409 (Conflict).*';
+				$result | Should Be $true
+			}
+			
+			# Assert
+			$new | Should Not Be $null;
+			$definition.id -eq $new.processDefinitionId | Should Be $true;
+			$resultSuspended | Should Not Be $null;
+			$resultSuspended.suspended | Should Be $true;
+			$resultSuspended.ended | Should Be $false;
+			$resultSuspended.completed | Should Be $false;
+			
+		}
+		
 		
 	}
 	

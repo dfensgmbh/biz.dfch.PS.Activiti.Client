@@ -1,164 +1,79 @@
-#
-# Module manifest for module 'biz.dfch.PS.Activiti.Client'
-#
 
-@{
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-# Script module or binary module file associated with this manifest.
-RootModule = 'biz.dfch.PS.Activiti.Client.psm1'
+Describe -Tags "Resume-WorkflowInstance" "Resume-WorkflowInstance" {
 
-# Version number of this module.
-ModuleVersion = '1.0.1.20160126'
+	Mock Export-ModuleMember { return $null; }
+	
+	. "$here\$sut"
+	
+	$svc = Enter-ActivitiServer;
 
-# ID used to uniquely identify this module
-GUID = '337f3ad4-6485-4572-8546-1f3adf8dcf50'
+	Context "Resume-WorkflowInstance" {
+	
+		# Context wide constants
+		# N/A
 
-# Author of this module
-Author = 'd-fens GmbH'
+		It "Resume-WorkflowInstance" -Test {
+			# Arrange
+			$definitionKey='createTimersProcessPesterTests';		
+			$vars = @{"duration"="60000"};
+			
+			# Act
+			$definition = Get-ActivitiWorkflowDefinition -key $definitionKey;
+			$new = Start-ActivitiWorkflowInstance -id $definition.id -params $vars -svc $svc;
+				write-warning $new.id;	
+			# Act
+			$resultPause = Pause-ActivitiWorkflowInstance -id $new.id  -svc $svc;
+			$resultPaused = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+					
+			$resultResumed = Resume-WorkflowInstance -id $new.id  -svc $svc;
+			$resultResumedReloaded = Get-ActivitiWorkflowInstance -id $new.id -svc $svc;
+			
+			# Assert
+			$new | Should Not Be $null;
+			$definition.id -eq $new.processDefinitionId | Should Be $true;
+			$resultPaused | Should Not Be $null;
+			$resultPaused.suspended | Should Be $true;
+			$resultPaused.ended | Should Be $false;
+			$resultPaused.completed | Should Be $false;
+		
+			$resultResumed | Should Not Be $null;
+			$resultResumed.suspended | Should Be $false;
+			$resultResumed.ended | Should Be $false;
+			$resultResumed.completed | Should Be $false;
+			
+			$resultResumedReloaded | Should Not Be $null;
+			$resultResumedReloaded.suspended | Should Be $false;
+			$resultResumedReloaded.ended | Should Be $false;
+			$resultResumedReloaded.completed | Should Be $false;
+		}
 
-# Company or vendor of this module
-CompanyName = 'd-fens GmbH'
-
-# Copyright statement for this module
-Copyright = '(c) 2015 d-fens GmbH. Distributed under Apache 2.0 license.'
-
-# Description of the functionality provided by this module
-# Description = 'Appclusive abstraction module for PowerShell automation'
-
-# Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '3.0'
-
-# Name of the Windows PowerShell host required by this module
-# PowerShellHostName = ''
-
-# Minimum version of the Windows PowerShell host required by this module
-# PowerShellHostVersion = ''
-
-# Minimum version of the .NET Framework required by this module
-DotNetFrameworkVersion = '4.5'
-
-# Minimum version of the common language runtime (CLR) required by this module
-# CLRVersion = ''
-
-# Processor architecture (None, X86, Amd64) required by this module
-# ProcessorArchitecture = ''
-
-# Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @(
-	'biz.dfch.PS.System.Logging'
-)
-
-# Assemblies that must be loaded prior to importing this module
-RequiredAssemblies = @(
-	'biz.dfch.CS.Activiti.Client.dll'
-)
-
-# Script files (.ps1) that are run in the caller's environment prior to importing this module.
-ScriptsToProcess = @(
-	'Import-Module.ps1'
-)
-
-# ModuleToProcess = @()
-
-# Type files (.ps1xml) to be loaded when importing this module
-# TypesToProcess = @()
-
-# Format files (.ps1xml) to be loaded when importing this module
-# FormatsToProcess = @()
-
-# Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @(
-	'Enter-Server.ps1'
-	,
-	'Get-WorkflowDefinition.ps1'
-	,
-	'Get-WorkflowDeployment.ps1'
-	,
-	'Get-WorkflowDeployments.ps1'
-	,
-	'Remove-WorkflowDeployment.ps1'
-	,
-	'Create-WorkflowDeployment.ps1'
-	,
-	'Start-WorkflowInstance.ps1'
-	,
-	'Suspend-WorkflowInstance.ps1'
-	,
-	'Resume-WorkflowInstance.ps1'
-	,
-	'Get-WorkflowInstance.ps1'
-	,
-	'Stop-WorkflowInstance.ps1'
-)
-
-# Functions to export from this module
-FunctionsToExport = '*'
-
-# Cmdlets to export from this module
-CmdletsToExport = '*'
-
-# Variables to export from this module
-VariablesToExport = '*'
-
-# Aliases to export from this module
-AliasesToExport = '*'
-
-# List of all modules packaged with this module.
-# ModuleList = @()
-
-# List of all files packaged with this module
-FileList = @(
-	'LICENSE'
-	,
-	'NOTICE'
-	,
-	'README.md'
-	,
-	'biz.dfch.CS.Activiti.Client.dll'
-	,
-	'biz.dfch.PS.Activiti.Client.xml'
-	,
-	'Newtonsoft.Json.dll'
-	,
-	'Newtonsoft.Json.xml'
-	,
-	'Import-Module.ps1'
-)
-
-# Private data to pass to the module specified in RootModule/ModuleToProcess
-PrivateData = @{
-	"MODULEVAR" = "biz_dfch_PS_Activiti_Client"
+	}
 }
 
-# HelpInfo URI of this module
-HelpInfoURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
-
-# Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
-DefaultCommandPrefix = 'Activiti'
-
-}
-
-# 
+#
 # Copyright 2015 d-fens GmbH
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# 
+#
 
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUm7d9PDDcL8vX8EkHTfhsTZi4
-# aH6gghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUxxskGX4k5sl1VbhJSSF99zys
+# PkegghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -257,26 +172,26 @@ DefaultCommandPrefix = 'Activiti'
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBS3tmp04m/XqpFY
-# a8Z4lGBLQz8c6DANBgkqhkiG9w0BAQEFAASCAQCBFozQoDRZ5W81XLO3enr5p/kj
-# ZYzxjmtsRUxU5bY4kbABZC+suQZuU1W5SWHo3+WaqmOlh+ieVQjoI2Ww9XZiyLcY
-# FPexBWScWLGIGA/cCgY8wuImxhQsfw+Vfdfg+nVSJ8ym7N5C10DWXyx0BGELzWUY
-# +uF2vIcI0U/PGwvbg6DGQyCmUv7kyp46cil4NjXT7ceExagnI8Vn9qygkdRQ3yz4
-# kuetvZczT2+T9WZP7zOnXndF2pGarICaFZfas9bSsZa/4gTzY6rnSdyT1CkccCep
-# h452nc8pzmRPMtYwZ7ecAGyf8fJUitCcGnk2aJcnv3yaD1btanYRF1ZKo1OeoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTGKJo4sn9alO2y
+# G/U7ywmjk9W9LTANBgkqhkiG9w0BAQEFAASCAQCMCUy3jIgGfJcKp55ip7VUqiFV
+# YeiKYM099ZGo1ZbAGpMgpiuFJiQNTBIMWzxHkrF8XvVDxTz3ffAmIzhsrvofyqjE
+# eYAsG2Zvs9wUZneh16QFWfy+D2+KLEGb9LVdXFAyDDWmq1MOWui4JLb009yWLPJQ
+# v5bvMO7NW7bdxfIkzc1pA77jYTQ0tUl/YD1M2SN+pMUsMurr9iRawTK/cESkGADi
+# q826zwgy73APYl6hklAEd6AGuvTjdAbG7HOe5DGHaF2p7hgAM71RT5JOPIiup+XX
+# s/oNZL4DsaDy2W2ihkth8DY1/vBFFbLsJJ0P0Cp2t3aV4jvP3qiCVfMpVzCkoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTIwMjA0MzM0MVowIwYJKoZIhvcNAQkEMRYEFGeH5fZzwT/Ms7r9XbzdH7zkUN6A
+# MTIwMjA0MzM0M1owIwYJKoZIhvcNAQkEMRYEFLOn6fbogL+m5rSPAcw6NYhZgl4k
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCoYiyNcoUFhnRc7Ssm
-# nHu1KNdiFcMJOgz6cudnFYNJ1gyzQX9QIxzbhm+aLN9qNmuDOuhYFqXfs4Olktlw
-# DW0le55T7P1VPkn6omMyEYCNAvmJO4SMVn4G72E0m5sWim97PdNKg+KDkZkfcyZT
-# 9y4UMZUkkD/23+oAIk2zZqqCq+nP2aWFzywLi2xyYBk2v3yOKrTeKml5tRzGNEPI
-# VkOCgYDm+jMOPUK54seBLB79+i2n+VVncwpt4AfoFoJ6X2usPmJmGfXW7vhYFQ96
-# atL6UKcpCnS6RW11+QuEaZ1dvifdze84QHKq2jyhrTwYlxBRhBPUXNKV35fgGTVM
-# aBsS
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQB6/m+eIoKIu9lcxi9Q
+# 3I8u6SnachFNKMSTQvSibzNXid4t/1Lnx2V7CwHR4zbwO5ZMLwen7U96bHu5osuj
+# APZ/bWOnH2iBFbVSvTWTCRQkdN9+Mj7o/YES62xZ3q8hyHhOZNzX8PoW6phisv0D
+# ICVH5uZmy8GCQg7e0ZHqjcdTsIMZXhbAezytMkCHkmoG+rVYek0xntNcAbdSTh1f
+# Bq68FipjdrsvPIE1F4H3AsarqlaeC4oyDIl2BOYM8YEpGZxZzV+qZrpmzHHRkUR9
+# ns62NhuO1Ym1+NOaNb6yLZv2C1CV2M1OjEsxljFYypnPIkxetZdhbp7d34LlaMuQ
+# fipf
 # SIG # End signature block
