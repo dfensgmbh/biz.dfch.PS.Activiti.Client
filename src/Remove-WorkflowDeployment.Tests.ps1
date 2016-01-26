@@ -1,160 +1,55 @@
-#
-# Module manifest for module 'biz.dfch.PS.Activiti.Client'
-#
 
-@{
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-# Script module or binary module file associated with this manifest.
-RootModule = 'biz.dfch.PS.Activiti.Client.psm1'
+Describe -Tags "Remove-WorkflowDeployment" "Remove-WorkflowDeployment" {
 
-# Version number of this module.
-ModuleVersion = '1.0.1.20160126'
+	Mock Export-ModuleMember { return $null; }
+	
+	. "$here\$sut"
+	
+	$svc = Enter-ActivitiServer;
 
-# ID used to uniquely identify this module
-GUID = '337f3ad4-6485-4572-8546-1f3adf8dcf50'
+	Context "Remove-WorkflowDeployment" {
+	
+		# Context wide constants
+		# N/A
 
-# Author of this module
-Author = 'd-fens GmbH'
+		It "Remove-WorkflowDeploymentList" -Test {
+			# Arrange
+			# N/A
+			
+			# Act
+			$result = Remove-WorkflowDeployment -id '217287' -svc $svc;
 
-# Company or vendor of this module
-CompanyName = 'd-fens GmbH'
-
-# Copyright statement for this module
-Copyright = '(c) 2015 d-fens GmbH. Distributed under Apache 2.0 license.'
-
-# Description of the functionality provided by this module
-# Description = 'Appclusive abstraction module for PowerShell automation'
-
-# Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '3.0'
-
-# Name of the Windows PowerShell host required by this module
-# PowerShellHostName = ''
-
-# Minimum version of the Windows PowerShell host required by this module
-# PowerShellHostVersion = ''
-
-# Minimum version of the .NET Framework required by this module
-DotNetFrameworkVersion = '4.5'
-
-# Minimum version of the common language runtime (CLR) required by this module
-# CLRVersion = ''
-
-# Processor architecture (None, X86, Amd64) required by this module
-# ProcessorArchitecture = ''
-
-# Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @(
-	'biz.dfch.PS.System.Logging'
-)
-
-# Assemblies that must be loaded prior to importing this module
-RequiredAssemblies = @(
-	'biz.dfch.CS.Activiti.Client.dll'
-)
-
-# Script files (.ps1) that are run in the caller's environment prior to importing this module.
-ScriptsToProcess = @(
-	'Import-Module.ps1'
-)
-
-# ModuleToProcess = @()
-
-# Type files (.ps1xml) to be loaded when importing this module
-# TypesToProcess = @()
-
-# Format files (.ps1xml) to be loaded when importing this module
-# FormatsToProcess = @()
-
-# Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @(
-	'Enter-Server.ps1'
-	,
-	'Get-WorkflowDefinition.ps1'
-	,
-	'Get-WorkflowDeployment.ps1'
-	,
-	'Get-WorkflowDeployments.ps1'
-	,
-	'Remove-WorkflowDeployment.ps1'
-	,
-	'Create-WorkflowDeployment.ps1'
-	,
-	'Start-WorkflowInstance.ps1'
-	,
-	'Get-WorkflowInstance.ps1'
-	,
-	'Stop-WorkflowInstance.ps1'
-)
-
-# Functions to export from this module
-FunctionsToExport = '*'
-
-# Cmdlets to export from this module
-CmdletsToExport = '*'
-
-# Variables to export from this module
-VariablesToExport = '*'
-
-# Aliases to export from this module
-AliasesToExport = '*'
-
-# List of all modules packaged with this module.
-# ModuleList = @()
-
-# List of all files packaged with this module
-FileList = @(
-	'LICENSE'
-	,
-	'NOTICE'
-	,
-	'README.md'
-	,
-	'biz.dfch.CS.Activiti.Client.dll'
-	,
-	'biz.dfch.PS.Activiti.Client.xml'
-	,
-	'Newtonsoft.Json.dll'
-	,
-	'Newtonsoft.Json.xml'
-	,
-	'Import-Module.ps1'
-)
-
-# Private data to pass to the module specified in RootModule/ModuleToProcess
-PrivateData = @{
-	"MODULEVAR" = "biz_dfch_PS_Activiti_Client"
+			# Assert
+			$result | Should Not Be $null;
+			$result | Should Be $true;
+		}
+	}
 }
 
-# HelpInfo URI of this module
-HelpInfoURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
-
-# Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
-DefaultCommandPrefix = 'Activiti'
-
-}
-
-# 
+#
 # Copyright 2015 d-fens GmbH
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# 
+#
 
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUm7d9PDDcL8vX8EkHTfhsTZi4
-# aH6gghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUpJxYnNRdzflnz8ScHXOk+RAv
+# qPKgghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -253,26 +148,26 @@ DefaultCommandPrefix = 'Activiti'
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBS3tmp04m/XqpFY
-# a8Z4lGBLQz8c6DANBgkqhkiG9w0BAQEFAASCAQCBFozQoDRZ5W81XLO3enr5p/kj
-# ZYzxjmtsRUxU5bY4kbABZC+suQZuU1W5SWHo3+WaqmOlh+ieVQjoI2Ww9XZiyLcY
-# FPexBWScWLGIGA/cCgY8wuImxhQsfw+Vfdfg+nVSJ8ym7N5C10DWXyx0BGELzWUY
-# +uF2vIcI0U/PGwvbg6DGQyCmUv7kyp46cil4NjXT7ceExagnI8Vn9qygkdRQ3yz4
-# kuetvZczT2+T9WZP7zOnXndF2pGarICaFZfas9bSsZa/4gTzY6rnSdyT1CkccCep
-# h452nc8pzmRPMtYwZ7ecAGyf8fJUitCcGnk2aJcnv3yaD1btanYRF1ZKo1OeoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBRN/3R8sxD4Xl/P
+# FNJ7ZHD1/ZOODjANBgkqhkiG9w0BAQEFAASCAQCbAKNDE4wIe7mRp/h5Z2nJpqdJ
+# rp3iZ2lGjvkA1brOQenN2XqaUqzYR40X/S4iSsisWxt31D4bmH/zTlnZlPRcq0gK
+# 90Q2ERERI4h0lvIFPwCJ+7nrSV9OlGEy5cyYxjd1TC+a0hLk6X2vwTf5NUOsJ6fH
+# Yk9AmEnxePKkdkVdWR4X2GlKBuntBlxP/JcMrjJwxzzSBnBNQ8ADVOK1eWpt4RfC
+# 2va0y400uHGrTUPaY9Ss+kcseOnmoQ+GaO9VPA37ZViDw5dotekSUtXRxywmuqS/
+# Ot4X7ixiVdQV640QpHNwa2gl806GLuxLdUBNVI1WIzOHl9oG9K5rZXhSQ9XwoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTIwMjA0MzM0MVowIwYJKoZIhvcNAQkEMRYEFGeH5fZzwT/Ms7r9XbzdH7zkUN6A
+# MTEyNzE4Mjc1M1owIwYJKoZIhvcNAQkEMRYEFBdCl8qb53JKwQc73NlqmojkfbjS
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCoYiyNcoUFhnRc7Ssm
-# nHu1KNdiFcMJOgz6cudnFYNJ1gyzQX9QIxzbhm+aLN9qNmuDOuhYFqXfs4Olktlw
-# DW0le55T7P1VPkn6omMyEYCNAvmJO4SMVn4G72E0m5sWim97PdNKg+KDkZkfcyZT
-# 9y4UMZUkkD/23+oAIk2zZqqCq+nP2aWFzywLi2xyYBk2v3yOKrTeKml5tRzGNEPI
-# VkOCgYDm+jMOPUK54seBLB79+i2n+VVncwpt4AfoFoJ6X2usPmJmGfXW7vhYFQ96
-# atL6UKcpCnS6RW11+QuEaZ1dvifdze84QHKq2jyhrTwYlxBRhBPUXNKV35fgGTVM
-# aBsS
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQA2IP9bPzxntUZ++2oT
+# tJU32W3pPCMMXK7PSG8ilPuNsJHGrkWINBcHAoQfTA4Cek1UgW6lXHEJKhsMrvP6
+# PXS60sF6bRyPLT/P5sNHg0yocQxEi2VTbDJ8tfiUn5vAXeuJkakJmaLPf/SQQ23K
+# MQJ1L6veXMEBj/eQ2xl9o3uboj1Cw1Y871EiVEo4RNirFMBGCRBjQkNyVDgTrAPS
+# dftctMi4BeBQ7ZwlkCzUq3Aum3lhCcHHo3a9k/6GEzoC4rChkLFjMCLm9xH9tQdG
+# Tdak3A9ckC80sugY1lbksRb5qlEsXOrl5xQcRixOTTzhc4N1fG5ZrPhSjpvHZj8e
+# mbAn
 # SIG # End signature block

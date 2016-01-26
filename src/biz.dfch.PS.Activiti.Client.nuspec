@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>biz.dfch.PS.Activiti.Client</id>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <title>biz.dfch.PS.Activiti.Client</title>
     <authors>d-fens GmbH</authors>
     <owners>d-fens GmbH</owners>
@@ -23,7 +23,7 @@ You can also download this module via [NuGet](http://nuget.org) with [Install-Pa
 See https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/wiki for a detailed description on how to use the Cmdlets in this module.
 </description>
     <summary>This Microsoft PowerShell module contains Cmdlets to perform various base actions and utility/convenience functions with Activiti 5.x REST API.</summary>
-    <releaseNotes>20151202
+    <releaseNotes>20160126
 
 * providing core functions / Cmdlets
 * added parameter for listing/selecting workflows by key/id
@@ -47,6 +47,10 @@ See https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/wiki for a detailed
     <file src="Enter-Server.ps1" target="tools\Enter-Server.ps1" />
     <file src="Import-Module.ps1" target="tools\Import-Module.ps1" />
     <file src="Get-WorkflowDefinition.ps1" target="tools\Get-WorkflowDefinition.ps1" />
+    <file src="Get-WorkflowDeployment.ps1" target="tools\Get-WorkflowDeployment.ps1" />
+	<file src="Get-WorkflowDeployments.ps1" target="tools\Get-WorkflowDeployments.ps1" />
+	<file src="Create-WorkflowDeployment.ps1" target="tools\Create-WorkflowDeployment.ps1" />
+	<file src="Remove-WorkflowDeployment.ps1" target="tools\Remove-WorkflowDeployment.ps1" />
     <file src="Get-WorkflowInstance.ps1" target="tools\Get-WorkflowInstance.ps1" />
     <file src="Start-WorkflowInstance.ps1" target="tools\Start-WorkflowInstance.ps1" />
     <file src="Stop-WorkflowInstance.ps1" target="tools\Stop-WorkflowInstance.ps1" />

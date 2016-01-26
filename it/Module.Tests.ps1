@@ -167,6 +167,71 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		}
 	}
 
+	Context "#CLOUDTCL-2000-ActivitiWorkflowDefinitionDeployment" {
+		
+		It "Get-WorkflowDefinitionIdCreateIfNotExists" -Test {
+			# Arrange
+			$definitionKeyCreateTimer='createTimersProcessPesterTests';		
+			$definitionKeyExceptionAfterDuration='exceptionAfterDurationProcessPesterTests';		
+			# Act
+			$resultCreateTimer = GetDefinitionId($definitionKeyCreateTimer);
+			$definitionKeyExceptionAfterDuration = GetDefinitionId($definitionKeyCreateTimer);
+			
+			# Assert
+			$resultCreateTimer | Should Not Be $null;
+			$resultCreateTimer.Count -gt 0 | Should Be $true;
+			
+			$definitionKeyExceptionAfterDuration | Should Not Be $null;
+			$definitionKeyExceptionAfterDuration.Count -gt 0 | Should Be $true;
+			
+		}
+		
+		It "Get-ProcessDeployments" -Test {
+			# Arrange
+			# Create-WorkflowDefinitionIdCreateIfNotExists created 2 deployments before. (createTimersProcessPesterTests and exceptionAfterDurationProcessPesterTests)		
+			
+			# Act
+			$result = Get-ActivitiWorkflowDeployments;
+			
+			# Assert
+			$result | Should Not Be $null;
+			$result.data.Count -gt 1 | Should Be $true;
+		}
+		
+		It "Get-ProcessDeploymentByID" -Test {
+			# Arrange
+			# Create-WorkflowDefinitionIdCreateIfNotExists created 2 deployments before. (createTimersProcessPesterTests and exceptionAfterDurationProcessPesterTests)		
+			
+			# Act
+			$deployments = Get-ActivitiWorkflowDeployments;
+			$result = Get-ActivitiWorkflowDeployment -id $deployments.data[0].Id
+			
+			
+			# Assert
+			$deployments.data.Count -gt 1 | Should Be $true;
+			$result | Should Not Be $null;
+			$result.Id -eq $deployments.data[0].Id | Should Be $true;
+		}
+		
+		It "Remove-ProcessDeployment" -Test {
+			# Arrange
+			$definitionKeyCreateTimer='createTimersProcessPesterTests';		
+			$definitionIdCreateTimer = GetDefinitionId($definitionKeyCreateTimer); #Creates deployment if it does not exist
+			
+			# Act
+			$resultBefore = Get-ActivitiWorkflowDeployments -svc $svc
+			$resultCreateTimer = Remove-ActivitiWorkflowDeployment -id $definitionIdCreateTimer -svc $svc
+			$resultAfter = Get-ActivitiWorkflowDeployments -svc $svc
+			
+			# Assert
+			$resultBefore | Should Not Be $null;
+			$resultBefore.data.Count -gt 1 | Should Be $true;
+			
+			$resultAfter | Should Not Be $null;
+			$resultAfter.data.Count -gt ($resultBefore.data.Count-1) | Should Be $true;		
+		}
+	}
+		
 	Context "#CLOUDTCL-1897-ActivitiWorkflowDefinition" {
 	
 		BeforeEach {
@@ -266,9 +331,10 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		
 		It "CreateAndGet-WorkflowInstance-Succeeds" -Test {
 			# Arrange
-			$defid = "UserTaskToDone:1:1510";
-			$vars = @{};
-			
+			$definitionKey='createTimersProcessPesterTests';		
+			$defid = GetDefinitionId($definitionKey);
+			$vars = @{"duration"="10000"};
+		
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
 			$result = Get-ActivitiWorkflowInstance -id $new.id -svc $svc
@@ -295,8 +361,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		
 		It "CreateAndGetCompleted-WorkflowInstance-Succeeds" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:36";
-			$vars = @{"duration"="short"; "throwException"="false"};
+			$definitionKey='createTimersProcessPesterTests';		
+			$defid = GetDefinitionId($definitionKey);
+			$vars = @{"duration"="10000"};
 			
 			
 			# Act
@@ -336,8 +403,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		
 		It "CancelInvokedWorkflowInstance-Succeeds" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:36";
-			$vars = @{"duration"="long"; "throwException"="false"};
+			$definitionKey='createTimersProcessPesterTests';		
+			$defid = GetDefinitionId($definitionKey);
+			$vars = @{"duration"="60000"};
 			
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
@@ -356,8 +424,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			
 		It "CancelSuspendedWorkflowInstance-Succeeds" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:36";
-			$vars = @{"duration"="long"; "throwException"="false"};
+			$definitionKey='createTimersProcessPesterTests';		
+			$defid = GetDefinitionId($definitionKey);
+			$vars = @{"duration"="60000"};
 			
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
@@ -372,15 +441,16 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$ret | Should Be $true;
 			$result.deleteReason | Should Be 'ACTIVITI_DELETED';
 			$result.id | Should Be $new.id;
-			$result.suspended | Should Be 'True';
+			#$result.suspended | Should Be 'True';
 			$result.ended | Should Be 'True';
 			$result.completed | Should Be 'True';
 		}
 		
 		It "CancelCompletedWorkflowInstance-Fails" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:36";
-			$vars = @{"duration"="short"; "throwException"="false"};
+			$definitionKey='createTimersProcessPesterTests';		
+			$defid = GetDefinitionId($definitionKey);
+			$vars = @{"duration"="10000"};
 			
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
@@ -401,8 +471,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		
 		It "CancelFailedWorkflowInstance-Fails" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:36";
-			$vars = @{"duration"="short"; "throwException"="true"};
+			$definitionKey='exceptionAfterDurationProcessPesterTests';		
+			$defid = GetDefinitionId($definitionKey);
+			$vars = @{"duration"="10000"};
 					
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
@@ -424,8 +495,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		
 		It "CancelEndedWorkflowInstance-Fails" -Test {
 			# Arrange
-			$defid = "createTimersProcess:1:36";
-			$vars = @{"duration"="short"; "throwException"="false"};
+			$definitionKey='createTimersProcessPesterTests';		
+			$defid = GetDefinitionId($definitionKey);
+			$vars = @{"duration"="10000"};
 					
 			# Act
 			$new = Start-ActivitiWorkflowInstance -id $defid -params $vars -svc $svc;
@@ -455,6 +527,15 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		}
 		
 	}
+	
+	#Remove deployments from tests at the end
+		$definitionKeyCreateTimer='createTimersProcessPesterTests';		
+		$definitionKeyExceptionAfterDuration='exceptionAfterDurationProcessPesterTests';
+			
+		# Act
+		$resultCreateTimer = Remove-ActivitiWorkflowDeployment -id $definitionKeyCreateTimer -svc $svc
+		$resultExceptionAfterDuration = Remove-ActivitiWorkflowDeployment -id $definitionKeyExceptionAfterDuration -svc $svc
+			
 }
 
 #

@@ -1,138 +1,139 @@
-#
-# Module manifest for module 'biz.dfch.PS.Activiti.Client'
-#
+function Remove-WorkflowDeployment {
+<#
+.SYNOPSIS
+Removes a configured Workflow Deployment from Activiti.
 
-@{
 
-# Script module or binary module file associated with this manifest.
-RootModule = 'biz.dfch.PS.Activiti.Client.psm1'
+.DESCRIPTION
+Removes a configured Workflow Deployment from Activiti.
 
-# Version number of this module.
-ModuleVersion = '1.0.1.20160126'
 
-# ID used to uniquely identify this module
-GUID = '337f3ad4-6485-4572-8546-1f3adf8dcf50'
+.OUTPUTS
 
-# Author of this module
-Author = 'd-fens GmbH'
 
-# Company or vendor of this module
-CompanyName = 'd-fens GmbH'
+.INPUTS
+See PARAMETER section for a description of input parameters.
 
-# Copyright statement for this module
-Copyright = '(c) 2015 d-fens GmbH. Distributed under Apache 2.0 license.'
 
-# Description of the functionality provided by this module
-# Description = 'Appclusive abstraction module for PowerShell automation'
+.EXAMPLE
+Remove-WorkflowDeployment -id "27741"
 
-# Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '3.0'
-
-# Name of the Windows PowerShell host required by this module
-# PowerShellHostName = ''
-
-# Minimum version of the Windows PowerShell host required by this module
-# PowerShellHostVersion = ''
-
-# Minimum version of the .NET Framework required by this module
-DotNetFrameworkVersion = '4.5'
-
-# Minimum version of the common language runtime (CLR) required by this module
-# CLRVersion = ''
-
-# Processor architecture (None, X86, Amd64) required by this module
-# ProcessorArchitecture = ''
-
-# Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @(
-	'biz.dfch.PS.System.Logging'
+#>
+[CmdletBinding(
+	HelpURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
+	,
+    SupportsShouldProcess = $true
+	,
+    ConfirmImpact = 'Low'
+	,
+	DefaultParameterSetName = 'id'
+)]
+<#[OutputType([<Type>])]#>
+Param 
+(
+	# Specifies a workflow definition id
+	[Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'id')]
+	$Id
+	,
+	# Specifies a references to the Activiti client
+	[Parameter(Mandatory = $false, Position = 1)]
+	[Alias("svc")]
+	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
+	
 )
 
-# Assemblies that must be loaded prior to importing this module
-RequiredAssemblies = @(
-	'biz.dfch.CS.Activiti.Client.dll'
-)
-
-# Script files (.ps1) that are run in the caller's environment prior to importing this module.
-ScriptsToProcess = @(
-	'Import-Module.ps1'
-)
-
-# ModuleToProcess = @()
-
-# Type files (.ps1xml) to be loaded when importing this module
-# TypesToProcess = @()
-
-# Format files (.ps1xml) to be loaded when importing this module
-# FormatsToProcess = @()
-
-# Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @(
-	'Enter-Server.ps1'
-	,
-	'Get-WorkflowDefinition.ps1'
-	,
-	'Get-WorkflowDeployment.ps1'
-	,
-	'Get-WorkflowDeployments.ps1'
-	,
-	'Remove-WorkflowDeployment.ps1'
-	,
-	'Create-WorkflowDeployment.ps1'
-	,
-	'Start-WorkflowInstance.ps1'
-	,
-	'Get-WorkflowInstance.ps1'
-	,
-	'Stop-WorkflowInstance.ps1'
-)
-
-# Functions to export from this module
-FunctionsToExport = '*'
-
-# Cmdlets to export from this module
-CmdletsToExport = '*'
-
-# Variables to export from this module
-VariablesToExport = '*'
-
-# Aliases to export from this module
-AliasesToExport = '*'
-
-# List of all modules packaged with this module.
-# ModuleList = @()
-
-# List of all files packaged with this module
-FileList = @(
-	'LICENSE'
-	,
-	'NOTICE'
-	,
-	'README.md'
-	,
-	'biz.dfch.CS.Activiti.Client.dll'
-	,
-	'biz.dfch.PS.Activiti.Client.xml'
-	,
-	'Newtonsoft.Json.dll'
-	,
-	'Newtonsoft.Json.xml'
-	,
-	'Import-Module.ps1'
-)
-
-# Private data to pass to the module specified in RootModule/ModuleToProcess
-PrivateData = @{
-	"MODULEVAR" = "biz_dfch_PS_Activiti_Client"
+BEGIN 
+{
+	$datBegin = [datetime]::Now;
+	[string] $fn = $MyInvocation.MyCommand.Name;
+	Log-Debug $fn ("CALL.") -fac 1;
+		
+	# ProcessEngine validation
+	if($ProcessEngine -isnot [System.Object]) {
+		$msg = "Activiti: ProcessEngine validation FAILED. Connect to the server before using the Cmdlet.";
+		$e = New-CustomErrorRecord -m $msg -cat InvalidData -o $ProcessEngine;
+		$PSCmdlet.ThrowTerminatingError($e);
+	} # if	
 }
+# BEGIN 
 
-# HelpInfo URI of this module
-HelpInfoURI = 'http://dfch.biz/biz/dfch/PS/Activiti/Client/'
+PROCESS 
+{
 
-# Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
-DefaultCommandPrefix = 'Activiti'
+[boolean] $fReturn = $false;
+$OutputParameter = $null;
+try 
+{
+	# Parameter validation
+	# N/A
+	
+	# Call method
+	if($PSCmdlet.ParameterSetName -eq 'id') 
+	{
+		$OutputParameter = $ProcessEngine.DeleteDeployment($Id);
+	}
+	$fReturn = $true;
+}
+catch 
+{
+	if($gotoSuccess -eq $_.Exception.Message) 
+	{
+			$fReturn = $true;
+	} 
+	else 
+	{
+		[string] $ErrorText = "catch [$($_.FullyQualifiedErrorId)]";
+		$ErrorText += (($_ | fl * -Force) | Out-String);
+		$ErrorText += (($_.Exception | fl * -Force) | Out-String);
+		$ErrorText += (Get-PSCallStack | Out-String);
+		
+		if($_.Exception -is [System.Net.WebException]) 
+		{
+			Log-Critical $fn "Login to Uri '$Uri' with Username '$Username' FAILED [$_].";
+			Log-Debug $fn $ErrorText -fac 3;
+		}
+		else 
+		{
+			Log-Error $fn $ErrorText -fac 3;
+			if($gotoError -eq $_.Exception.Message) 
+			{
+				Log-Error $fn $e.Exception.Message;
+				$PSCmdlet.ThrowTerminatingError($e);
+			} 
+			elseif($gotoFailure -ne $_.Exception.Message) 
+			{ 
+				Write-Verbose ("$fn`n$ErrorText"); 
+			} 
+			else 
+			{
+				# N/A
+			}
+		}
+		$fReturn = $false;
+		$OutputParameter = $null;
+	}
+}
+finally 
+{
+	# Clean up
+	# N/A
+}
+return $OutputParameter;
+# N/A
 
 }
+# PROCESS
+
+END 
+{
+	$datEnd = [datetime]::Now;
+	Log-Debug -fn $fn -msg ("RET. fReturn: [{0}]. Execution time: [{1}]ms. Started: [{2}]." -f $fReturn, ($datEnd - $datBegin).TotalMilliseconds, $datBegin.ToString('yyyy-MM-dd HH:mm:ss.fffzzz')) -fac 2;
+}
+# END
+
+} # function
+
+if($MyInvocation.ScriptName) { Export-ModuleMember -Function Remove-WorkflowDeployment; } 
 
 # 
 # Copyright 2015 d-fens GmbH
@@ -153,8 +154,8 @@ DefaultCommandPrefix = 'Activiti'
 # SIG # Begin signature block
 # MIIXDwYJKoZIhvcNAQcCoIIXADCCFvwCAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUm7d9PDDcL8vX8EkHTfhsTZi4
-# aH6gghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUX7SN3MMgXsNAJ264z/KuXMxD
+# zNagghHCMIIEFDCCAvygAwIBAgILBAAAAAABL07hUtcwDQYJKoZIhvcNAQEFBQAw
 # VzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNV
 # BAsTB1Jvb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0
 # MTMxMDAwMDBaFw0yODAxMjgxMjAwMDBaMFIxCzAJBgNVBAYTAkJFMRkwFwYDVQQK
@@ -253,26 +254,26 @@ DefaultCommandPrefix = 'Activiti'
 # MDAuBgNVBAMTJ0dsb2JhbFNpZ24gQ29kZVNpZ25pbmcgQ0EgLSBTSEEyNTYgLSBH
 # MgISESENFrJbjBGW0/5XyYYR5rrZMAkGBSsOAwIaBQCgeDAYBgorBgEEAYI3AgEM
 # MQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3AgEEMBwGCisGAQQB
-# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBS3tmp04m/XqpFY
-# a8Z4lGBLQz8c6DANBgkqhkiG9w0BAQEFAASCAQCBFozQoDRZ5W81XLO3enr5p/kj
-# ZYzxjmtsRUxU5bY4kbABZC+suQZuU1W5SWHo3+WaqmOlh+ieVQjoI2Ww9XZiyLcY
-# FPexBWScWLGIGA/cCgY8wuImxhQsfw+Vfdfg+nVSJ8ym7N5C10DWXyx0BGELzWUY
-# +uF2vIcI0U/PGwvbg6DGQyCmUv7kyp46cil4NjXT7ceExagnI8Vn9qygkdRQ3yz4
-# kuetvZczT2+T9WZP7zOnXndF2pGarICaFZfas9bSsZa/4gTzY6rnSdyT1CkccCep
-# h452nc8pzmRPMtYwZ7ecAGyf8fJUitCcGnk2aJcnv3yaD1btanYRF1ZKo1OeoYIC
+# gjcCAQsxDjAMBgorBgEEAYI3AgEVMCMGCSqGSIb3DQEJBDEWBBTv0h1lseuwpYpe
+# kU91b6kFQQhOrDANBgkqhkiG9w0BAQEFAASCAQAOE0ULAOcos2StM9F2fRFcirAu
+# jewA35Aadkd/gh2mrujk7VGMCfN7hgD7XCdFVndTrIxondM1cTnhOIrHaU6LZAcC
+# cSPPjVwwl2geD677olKlE9Rudk5TfPQ4daAq1QvA6SnQHagt42Rm5YNiHEKo9Kew
+# ADi6VK9iQMD8u69+HGnBjr7ORr+VIdSFKR62PPqNV/fHxxFxBnSJNQoSj7SPSdN2
+# 11bbohzRlkvNWCsxKt9ESFNRNYdXDv8MVB3NqkP/zhvOpa0oXdZgoaEJW1blt/ey
+# RWvsgk8NuT8zPXpOBYx5wJxYqmIWMKFw1jcdT0g/QLSZ79db9SvvBGqJDbbQoYIC
 # ojCCAp4GCSqGSIb3DQEJBjGCAo8wggKLAgEBMGgwUjELMAkGA1UEBhMCQkUxGTAX
 # BgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGlt
 # ZXN0YW1waW5nIENBIC0gRzICEhEhBqCB0z/YeuWCTMFrUglOAzAJBgUrDgMCGgUA
 # oIH9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1
-# MTIwMjA0MzM0MVowIwYJKoZIhvcNAQkEMRYEFGeH5fZzwT/Ms7r9XbzdH7zkUN6A
+# MTIwMjA0MzM0MVowIwYJKoZIhvcNAQkEMRYEFAfBeMxCs8IaMJvZJ0j705xV8hpR
 # MIGdBgsqhkiG9w0BCRACDDGBjTCBijCBhzCBhAQUs2MItNTN7U/PvWa5Vfrjv7Es
 # KeYwbDBWpFQwUjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
 # c2ExKDAmBgNVBAMTH0dsb2JhbFNpZ24gVGltZXN0YW1waW5nIENBIC0gRzICEhEh
-# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCoYiyNcoUFhnRc7Ssm
-# nHu1KNdiFcMJOgz6cudnFYNJ1gyzQX9QIxzbhm+aLN9qNmuDOuhYFqXfs4Olktlw
-# DW0le55T7P1VPkn6omMyEYCNAvmJO4SMVn4G72E0m5sWim97PdNKg+KDkZkfcyZT
-# 9y4UMZUkkD/23+oAIk2zZqqCq+nP2aWFzywLi2xyYBk2v3yOKrTeKml5tRzGNEPI
-# VkOCgYDm+jMOPUK54seBLB79+i2n+VVncwpt4AfoFoJ6X2usPmJmGfXW7vhYFQ96
-# atL6UKcpCnS6RW11+QuEaZ1dvifdze84QHKq2jyhrTwYlxBRhBPUXNKV35fgGTVM
-# aBsS
+# BqCB0z/YeuWCTMFrUglOAzANBgkqhkiG9w0BAQEFAASCAQCXUg2aEuRZeF1ZczZn
+# GmcQD7678tweKQDghDd4R071tzzbWbe+Ax36US3KA6+eQVKqshgg4V9DSlNiGvAE
+# wPcODkmILs8cVVv5PI/J3wP8p1bpMu6hyprKQgdSb0ku6ok+JyS9Q/88PeKXa+Pg
+# YK6EF3im0ZPFV0GDD6a1jSgJoOqLvWiMezwjAOEIW2Q4yaj51DIG9rVGBpIYHW69
+# n+OL4kaQS96jRtb4wtrV3i/ARPSxXR/PKUstb3vmtZGZFeqAaEOyu2wSUwnp32qV
+# HVYE7rNVk3+hZn6TE0qI37tBOfQQfEaTGs5rmE/hKaAtgsnThmF6q1cAoNWkzOYA
+# MH5E
 # SIG # End signature block

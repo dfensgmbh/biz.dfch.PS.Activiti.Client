@@ -63,17 +63,23 @@ startFormDefined         : False
 Param 
 (
 	# Specifies a workflow definition id
-	[Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'name')]
-	[Alias("id")]
-	[Alias("key")]
-	$InputObject
+	[Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'id')]
+	$Id
+	,	
+	# Specifies a workflow definition key
+	[Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'key')]
+	$Key
+	,	
+	# Specifies if only the latest workflow definition is returned
+	[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'key')]
+	[switch] $LastestVersion = $true
 	,
 	# Specifies to return all existing workflow instances
-	[Parameter(Mandatory = $false, Position = 1, ParameterSetName = 'list')]
+	[Parameter(Mandatory = $false, Position = 0, ParameterSetName = 'list')]
 	[switch] $ListAvailable = $false
 	,
 	# Specifies a references to the Activiti client
-	[Parameter(Mandatory = $false, Position = 2)]
+	[Parameter(Mandatory = $false, Position = 1)]
 	[Alias("svc")]
 	$ProcessEngine = (Get-Variable -Name $MyInvocation.MyCommand.Module.PrivateData.MODULEVAR -ValueOnly).ProcessEngine
 )
@@ -105,40 +111,25 @@ try
 	# N/A
 	
 	# Call method
-	$WorkflowDefinitionList = $ProcessEngine.GetWorkflowDefinitions();
-	if ( $WorkflowDefinitionList -ne $null ) 
+	if($PSCmdlet.ParameterSetName -eq 'list') 
 	{
-		$WorkflowDefinitionList = $WorkflowDefinitionList | Select -ExpandProperty data;
-		
-		# Call method
-		if($PSCmdlet.ParameterSetName -eq 'name') 
+		$WorkflowDefinitionList = $ProcessEngine.GetWorkflowDefinitions();
+		if ( $WorkflowDefinitionList -ne $null ) 
 		{
-			# Get ValueFromPipeline
-			$OutputObject = @();	
-			foreach($Object in $InputObject) {
-				if($PSCmdlet.ShouldProcess($Object)) {
-
-					# Call method
-					$OutputParameter = $WorkflowDefinitionList | Where { $_.id -eq $Object -or $_.key -eq $Object };
-					$OutputObject += $OutputParameter;
-
-				} # if
-			} # foreach
+			$WorkflowDefinitionList = $WorkflowDefinitionList | Select -ExpandProperty data;
 			
-			# Set output depending is ValueFromPipeline
-			if ( $OutputObject.Count -gt 1 )
-			{
-				$OutputParameter = $OutputObject[0];
-			}
-			else
-			{
-				$OutputParameter = $OutputObject;
-			}	
-		} 
-		else
-		{
-			$OutputParameter = $WorkflowDefinitionList;
+			# Call method
+				$OutputParameter = $WorkflowDefinitionList;
 		}
+	}
+	elseif($PSCmdlet.ParameterSetName -eq 'id') 
+	{
+		$OutputParameter = $ProcessEngine.GetWorkflowDefinition($Id);
+	}
+	else
+	{
+		$r = $ProcessEngine.GetWorkflowDefinitionByKey($Key, $LastestVersion);
+		$OutputParameter = $r.data;
 	}
 	$fReturn = $true;
 
