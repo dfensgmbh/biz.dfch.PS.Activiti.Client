@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>biz.dfch.PS.Activiti.Client</id>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <title>biz.dfch.PS.Activiti.Client</title>
     <authors>d-fens GmbH</authors>
     <owners>d-fens GmbH</owners>
@@ -23,8 +23,8 @@ You can also download this module via [NuGet](http://nuget.org) with [Install-Pa
 See https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/wiki for a detailed description on how to use the Cmdlets in this module.
 </description>
     <summary>This Microsoft PowerShell module contains Cmdlets to perform various base actions and utility/convenience functions with Activiti 5.x REST API.</summary>
-    <releaseNotes>20160126
-* Update API version to 1.1.0
+    <releaseNotes>20160127
+* Update API version to 1.1.1
 * Cmdlets for Get, Create and Remove workflow deployment added
 * Cmdlets for Suspend and Resume workflow instance added
 * Support for getting historic workflow instance variables
@@ -57,7 +57,7 @@ See https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/wiki for a detailed
 	<file src="Resume-WorkflowInstance.ps1" target="tools\Resume-WorkflowInstance.ps1" />
     <file src="Start-WorkflowInstance.ps1" target="tools\Start-WorkflowInstance.ps1" />
     <file src="Stop-WorkflowInstance.ps1" target="tools\Stop-WorkflowInstance.ps1" />
-    <file src="..\packages\biz.dfch.CS.Activiti.Client.1.1.0\lib\biz.dfch.CS.Activiti.Client.dll" target="tools\biz.dfch.CS.Activiti.Client.dll" />
+    <file src="..\packages\biz.dfch.CS.Activiti.Client.1.1.1\lib\biz.dfch.CS.Activiti.Client.dll" target="tools\biz.dfch.CS.Activiti.Client.dll" />
     <file src="..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll" target="tools\Newtonsoft.Json.dll" />
     <file src="..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.xml" target="tools\Newtonsoft.Json.xml" />
   </files>
