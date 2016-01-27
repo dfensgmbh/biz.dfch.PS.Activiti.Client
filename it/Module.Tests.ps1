@@ -687,10 +687,23 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		$definitionKeyCreateTimer='createTimersProcessPesterTests';		
 		$definitionKeyExceptionAfterDuration='exceptionAfterDurationProcessPesterTests';
 			
-		# Act
-		$resultCreateTimer = Remove-ActivitiWorkflowDeployment -id $definitionKeyCreateTimer -svc $svc
-		$resultExceptionAfterDuration = Remove-ActivitiWorkflowDeployment -id $definitionKeyExceptionAfterDuration -svc $svc
-			
+		try
+			{
+				$varsCreateTimer = @{"key"=$definitionKeyCreateTimer}
+				$svc.GetWorkflowInstances($varsCreateTimer).data | Select id | foreach { $svc.DeleteWorkflowInstance($_.id) }
+
+				$varsException = @{"key"=$definitionKeyExceptionAfterDuration}
+				$svc.GetWorkflowInstances($varsException).data | Select id | foreach { $svc.DeleteWorkflowInstance($_.id) }
+
+				$svc.GetWorkflowDefinitionByKey($definitionKeyCreateTimer, $false).data | Select deploymentId | foreach {$svc.DeleteDeployment($_.deploymentId) }
+				$svc.GetWorkflowDefinitionByKey($definitionKeyExceptionAfterDuration, $false).data | Select deploymentId | foreach {$svc.DeleteDeployment($_.deploymentId) }
+	
+			}
+			catch
+			{
+				Write-Warning ('Error on removing deployments: ' + $error[0].Exception.Message);
+			}
+
 }
 
 #
