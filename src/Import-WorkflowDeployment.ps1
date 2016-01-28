@@ -1,4 +1,4 @@
-function Create-WorkflowDeployment {
+function Import-WorkflowDeployment {
 <#
 .SYNOPSIS
 Creates a Workflow Deployment in Activiti.
@@ -15,7 +15,7 @@ See PARAMETER section for a description of input parameters.
 
 
 .EXAMPLE
-Create-WorkflowDeployment;
+Import-WorkflowDeployment;
 
 #>
 [CmdletBinding(
@@ -144,7 +144,7 @@ END
 
 } # function
 
-if($MyInvocation.ScriptName) { Export-ModuleMember -Function Create-WorkflowDeployment; } 
+if($MyInvocation.ScriptName) { Export-ModuleMember -Function Import-WorkflowDeployment; } 
 
 # 
 # Copyright 2015 d-fens GmbH
