@@ -103,7 +103,6 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 				# Assert
 				$result = $error[0].Exception.Message -match 'Login.+FAILED';
 				$result | Should Be $true
-				$svc | Should Be $null;
 			}
 		}
 
@@ -129,7 +128,6 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 				# Assert
 				$result = $error[0].Exception.Message -match 'Login.+FAILED';
 				$result | Should Be $true
-				$svc | Should Be $null;
 			}
 		}
 
@@ -168,6 +166,13 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 	}
 
 	Context "#CLOUDTCL-2000-ActivitiWorkflowDefinitionDeployment" {
+		
+		BeforeEach {
+			$moduleName = 'biz.dfch.PS.Activiti.Client';
+			Remove-Module $moduleName -ErrorAction:SilentlyContinue;
+			Import-Module $moduleName;
+			$svc = Enter-Activiti -Credential $cred;
+		}
 		
 		It "Get-WorkflowDefinitionIdCreateIfNotExists" -Test {
 			# Arrange
@@ -219,9 +224,9 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$definitionIdCreateTimer = GetDefinitionId($definitionKeyCreateTimer); #Creates deployment if it does not exist
 			
 			# Act
-			$resultBefore = Get-ActivitiWorkflowDeployments -svc $svc
-			$resultCreateTimer = Remove-ActivitiWorkflowDeployment -id $definitionIdCreateTimer -svc $svc
-			$resultAfter = Get-ActivitiWorkflowDeployments -svc $svc
+			$resultBefore = Get-ActivitiWorkflowDeployments 
+			$resultCreateTimer = Remove-ActivitiWorkflowDeployment -id $definitionIdCreateTimer
+			$resultAfter = Get-ActivitiWorkflowDeployments
 			
 			# Assert
 			$resultBefore | Should Not Be $null;
@@ -702,6 +707,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			catch
 			{
 				Write-Warning ('Error on removing deployments: ' + $error[0].Exception.Message);
+				Write-Warning ('Error on removing deployments: ' + $error[0].Exception.StackTrace);
 			}
 
 }
