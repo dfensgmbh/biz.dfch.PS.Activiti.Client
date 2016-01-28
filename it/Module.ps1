@@ -22,7 +22,6 @@
 		{
 			#Create the workflow definition
 			$filename = Join-Path -path $currentPath -childpath "\exceptionAfterDurationProcessPesterTests.bpmn20.xml";	 
-			write-warning $filename;
 			$bytes = [System.IO.File]::ReadAllBytes($filename)
 			$response = $biz_dfch_PS_Activiti_Client.ProcessEngine.CreateDeployment($filename, $bytes);
 			if($response -ne $null -and $response.id -gt 0)
