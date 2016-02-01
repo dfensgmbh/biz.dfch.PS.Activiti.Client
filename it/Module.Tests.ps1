@@ -193,7 +193,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		
 		It "Get-ProcessDeployments" -Test {
 			# Arrange
-			# Create-WorkflowDefinitionIdCreateIfNotExists created 2 deployments before. (createTimersProcessPesterTests and exceptionAfterDurationProcessPesterTests)		
+			# Import-WorkflowDefinitionIdCreateIfNotExists created 2 deployments before. (createTimersProcessPesterTests and exceptionAfterDurationProcessPesterTests)		
 			
 			# Act
 			$result = Get-ActivitiWorkflowDeployments;
@@ -205,7 +205,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 		
 		It "Get-ProcessDeploymentByID" -Test {
 			# Arrange
-			# Create-WorkflowDefinitionIdCreateIfNotExists created 2 deployments before. (createTimersProcessPesterTests and exceptionAfterDurationProcessPesterTests)		
+			# Import-WorkflowDefinitionIdCreateIfNotExists created 2 deployments before. (createTimersProcessPesterTests and exceptionAfterDurationProcessPesterTests)		
 			
 			# Act
 			$deployments = Get-ActivitiWorkflowDeployments;
