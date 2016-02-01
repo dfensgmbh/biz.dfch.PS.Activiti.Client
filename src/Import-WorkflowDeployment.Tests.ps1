@@ -2,7 +2,7 @@
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".")
 
-Describe -Tags "Create-WorkflowDeployment" "Create-WorkflowDeployment" {
+Describe -Tags "Import-WorkflowDeployment" "Import-WorkflowDeployment" {
 
 	Mock Export-ModuleMember { return $null; }
 	
@@ -10,12 +10,12 @@ Describe -Tags "Create-WorkflowDeployment" "Create-WorkflowDeployment" {
 	
 	$svc = Enter-ActivitiServer;
 
-	Context "Create-WorkflowDeployment" {
+	Context "Import-WorkflowDeployment" {
 	
 		# Context wide constants
 		# N/A
 
-		It "Create-WorkflowDeploymentByFileName" -Test {
+		It "Import-WorkflowDeploymentByFileName" -Test {
 			# Arrange
 			$filename = "C:\development\projects\GitHub\biz.dfch.PS.Activiti.Client\it\createTimersProcessPesterTests.bpmn20.xml";
 			
@@ -23,7 +23,7 @@ Describe -Tags "Create-WorkflowDeployment" "Create-WorkflowDeployment" {
 			write-warning $here
 			
 			# Act
-			$result = Create-WorkflowDeployment -filename $filename -svc $svc;
+			$result = Import-WorkflowDeployment -filename $filename -svc $svc;
 
 			# Assert
 			$result | Should Not Be $null;

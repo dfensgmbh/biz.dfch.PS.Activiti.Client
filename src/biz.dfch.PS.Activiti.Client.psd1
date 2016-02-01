@@ -8,7 +8,7 @@
 RootModule = 'biz.dfch.PS.Activiti.Client.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.1.1.20160127'
+ModuleVersion = '2.0.0.20160201'
 
 # ID used to uniquely identify this module
 GUID = '337f3ad4-6485-4572-8546-1f3adf8dcf50'
@@ -76,7 +76,7 @@ NestedModules = @(
 	,
 	'Remove-WorkflowDeployment.ps1'
 	,
-	'Create-WorkflowDeployment.ps1'
+	'Import-WorkflowDeployment.ps1'
 	,
 	'Start-WorkflowInstance.ps1'
 	,
