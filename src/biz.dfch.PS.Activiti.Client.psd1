@@ -146,9 +146,9 @@ PrivateData = @{
         # ReleaseNotes of this module
         ReleaseNotes = '20160201
 * Renamed Create-WorkflowDeployment to Import-WorkflowDeployment
-* installation base path is '$env:ProgramFiles\WindowsPowerShell\Modules' and can be manually set as input parameter to Install.ps1'
+* installation base path is "$env:ProgramFiles\WindowsPowerShell\Modules" and can be manually set as input parameter to Install.ps1'
 
-    } 
+    }
 
 	"MODULEVAR" = "biz_dfch_PS_Activiti_Client"
 }
