@@ -101,6 +101,9 @@ VariablesToExport = '*'
 # Aliases to export from this module
 AliasesToExport = '*'
 
+# DSC resources to export from this module
+# DscResourcesToExport = @()
+
 # List of all modules packaged with this module.
 # ModuleList = @()
 
@@ -125,6 +128,28 @@ FileList = @(
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess
 PrivateData = @{
+	
+	PSData = @{
+
+        # Tags applied to this module. These help with module discovery in online galleries.
+        Tags = @("dfch", "PowerShell", "Activiti", "Client", "BPMN")
+		
+        # A URL to the license for this module.
+        LicenseUri = 'https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client/blob/master/LICENSE'
+		
+        # A URL to the main website for this project.
+        ProjectUri = 'https://github.com/dfensgmbh/biz.dfch.PS.Activiti.Client.git'
+		
+        # A URL to an icon representing this module.
+        IconUri = 'https://raw.githubusercontent.com/dfensgmbh/biz.dfch.PS.Activiti.Client/master/logo-32x32.png'
+		
+        # ReleaseNotes of this module
+        ReleaseNotes = '20160201
+* Renamed Create-WorkflowDeployment to Import-WorkflowDeployment
+* installation base path is '$env:ProgramFiles\WindowsPowerShell\Modules' and can be manually set as input parameter to Install.ps1'
+
+    } 
+
 	"MODULEVAR" = "biz_dfch_PS_Activiti_Client"
 }
 
