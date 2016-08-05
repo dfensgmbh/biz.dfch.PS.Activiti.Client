@@ -23,7 +23,7 @@ CompanyName = 'd-fens GmbH'
 Copyright = '(c) 2015 d-fens GmbH. Distributed under Apache 2.0 license.'
 
 # Description of the functionality provided by this module
-# Description = 'Appclusive abstraction module for PowerShell automation'
+Description = 'Appclusive abstraction module for PowerShell automation'
 
 # Minimum version of the Windows PowerShell engine required by this module
 PowerShellVersion = '3.0'
