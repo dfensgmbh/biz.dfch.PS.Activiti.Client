@@ -57,7 +57,7 @@ Describe -Tags "Activiti.Tests" "Activiti.Tests" {
 			$moduleName = 'biz.dfch.PS.Activiti.Client';
 			Remove-Module $moduleName -ErrorAction:SilentlyContinue;
 			Import-Module $moduleName;
-			[Version] $ver = '1.0.0';
+			[Version] $ver = '2.0.0';
 			
 			# Act
 			$m = Get-Module biz.dfch.PS.Activiti.Client

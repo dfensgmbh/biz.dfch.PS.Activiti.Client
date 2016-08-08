@@ -1,5 +1,3 @@
-# Intentionally left blank
-
 # This method returns the definitionid of a given definitionkey.
 # If definitionkey is createTimersProcessPesterTests or exceptionAfterDurationProcessPesterTests and definition does not exist, the definition is deployed
 	function GetDefinitionId ($definitionkey)
